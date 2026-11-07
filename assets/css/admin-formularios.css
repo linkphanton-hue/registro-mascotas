@@ -1,0 +1,142 @@
+/* ============================================================
+   admin-formularios.css
+   Compartido por formularios administrativos. Actualmente formulario-cliente.php; reutilizable para mascotas.
+   ============================================================ */
+
+/* ============================================================
+   FORMULARIOS ADMINISTRADOR - campos, acciones y validación compartidos
+   ============================================================ */
+
+.formulario-admin {
+    padding: 30px;
+    background: #ffffff;
+    border: 1px solid #e9eaf4;
+    border-radius: 22px;
+}
+
+.formulario-admin h2 {
+    margin: 0 0 8px;
+    font-size: 22px;
+}
+
+.ayuda-formulario {
+    margin: 0 0 26px;
+    color: #737d98;
+    font-size: 13px;
+}
+
+.rejilla-formulario {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.campo-admin label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.campo-admin input,
+.campo-admin select {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+
+    font: inherit;
+    font-size: 14px;
+    color: #17234c;
+
+    background: #f8f9fe;
+    border: 1px solid #d9dcef;
+    border-radius: 11px;
+}
+
+.campo-admin input:focus-visible,
+.campo-admin select:focus-visible {
+    outline: 3px solid #e2d9ff;
+    outline-offset: 2px;
+    border-color: #7355ed;
+}
+
+.campo-admin small {
+    display: block;
+    margin-top: 7px;
+    color: #737d98;
+    font-size: 12px;
+}
+
+.acciones-formulario {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 26px;
+}
+
+button.boton-admin {
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.boton-cancelar {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 20px;
+
+    color: #63708c;
+    background: #f1f3f9;
+    border: 1px solid #e0e4ef;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.boton-cancelar:hover {
+    background: #e8ebf5;
+}
+
+.enlace-volver {
+    color: #6944d5;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.mensaje-admin {
+    margin: 0;
+    font-size: 14px;
+}
+
+.mensaje-admin:not(:empty) {
+    margin-top: 24px;
+    padding: 14px;
+    border-radius: 11px;
+}
+
+.mensaje-admin.error {
+    color: #9d1c34;
+    background: #fff0f2;
+}
+
+.mensaje-admin.informacion {
+    color: #314783;
+    background: #edf3ff;
+}
+
+/* ============================================================
+   FORMULARIOS ADMINISTRADOR - campos, acciones y validación compartidos - adaptación y movimiento
+   ============================================================ */
+
+@media (max-width: 700px) {
+    .formulario-admin {
+        padding: 22px;
+    }
+}
+
+@media (max-width: 700px) {
+    .rejilla-formulario {
+        grid-template-columns: 1fr;
+    }
+}

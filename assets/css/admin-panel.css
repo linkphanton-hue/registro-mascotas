@@ -1,0 +1,96 @@
+/* ============================================================
+   admin-panel.css
+   Exclusivo de admin/panel.php.
+   ============================================================ */
+
+/* ============================================================
+   INICIO ADMINISTRADOR - indicadores y accesos rápidos
+   ============================================================ */
+
+.resumen-admin {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.accesos-admin {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.acceso-admin {
+    display: block;
+    padding: 26px;
+
+    color: #17234c;
+    background: #ffffff;
+    border: 1px solid #e5e3f2;
+    border-radius: 20px;
+
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.acceso-admin:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(76, 58, 145, 0.09);
+}
+
+.acceso-icono {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    margin-bottom: 18px;
+
+    background: #eee9ff;
+    border-radius: 15px;
+    font-size: 29px;
+}
+
+.acceso-admin h3 {
+    margin: 0 0 10px;
+    font-size: 20px;
+}
+
+.acceso-admin p {
+    margin: 0 0 18px;
+    color: #65708b;
+    font-size: 14px;
+}
+
+.acceso-enlace {
+    color: #6944d5;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.seccion-registros {
+    margin-top: 34px;
+}
+
+/* ============================================================
+   INICIO ADMINISTRADOR - indicadores y accesos rápidos - adaptación y movimiento
+   ============================================================ */
+
+@media (max-width: 1000px) {
+    .resumen-admin {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .accesos-admin {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .acceso-admin {
+        transition: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .acceso-admin:hover {
+        transform: none;
+    }
+}

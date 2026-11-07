@@ -1,0 +1,501 @@
+/* ============================================================
+   inicio.css
+   Exclusivo de index.php. Contiene navegación, presentación, tarjetas e imágenes del sitio público.
+   ============================================================ */
+
+/* ============================================================
+   INICIO PÚBLICO - base, botones y accesibilidad
+   ============================================================ */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 24px;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #17234c;
+    background: #ffffff;
+    line-height: 1.6;
+}
+
+a {
+    color: #583bd1;
+}
+
+a:focus-visible {
+    outline: 3px solid #7654ed;
+    outline-offset: 5px;
+}
+
+.contenedor {
+    width: min(1120px, 90%);
+    margin-inline: auto;
+}
+
+.saltar-contenido {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    padding: 12px;
+    background: white;
+    z-index: 10;
+}
+
+.saltar-contenido:focus {
+    top: 12px;
+}
+
+/* ============================================================
+   INICIO PÚBLICO - navegación y marca
+   ============================================================ */
+
+.cabecera {
+    background: #ffffff;
+    border-bottom: 1px solid #eceafa;
+}
+
+.navegacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    padding-block: 20px;
+}
+
+.marca {
+    color: #19234e;
+    font-size: 18px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.menu {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 22px;
+}
+
+.menu > a:not(.boton) {
+    color: #505a79;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.menu > a:not(.boton):hover {
+    color: #653de0;
+}
+
+/* ============================================================
+   INICIO PÚBLICO - base, botones y accesibilidad
+   ============================================================ */
+
+.boton {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 48px;
+    padding: 12px 23px;
+
+    background: linear-gradient(110deg, #258cf5, #7c3ded);
+    color: #ffffff;
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+
+    box-shadow: 0 8px 20px rgba(95, 62, 211, 0.16);
+    transition: transform 0.2s;
+}
+
+.boton:hover {
+    transform: translateY(-2px);
+}
+
+.boton-pequeno {
+    min-height: 42px;
+    padding: 9px 18px;
+    font-size: 14px;
+}
+
+.boton-secundario {
+    color: #583bd1;
+    background: #ffffff;
+    border-color: #d8cff5;
+    box-shadow: none;
+}
+
+/* ============================================================
+   INICIO PÚBLICO - presentación principal
+   ============================================================ */
+
+.presentacion {
+    padding-block: 75px;
+    background:
+    radial-gradient(
+    circle at 90% 20%,
+    #ded5ff,
+    transparent 45%
+    ),
+    linear-gradient(120deg, #effaff, #f4f0ff);
+}
+
+.presentacion-contenido {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center;
+    gap: 60px;
+}
+
+/* ============================================================
+   INICIO PÚBLICO - base, botones y accesibilidad
+   ============================================================ */
+
+.etiqueta {
+    margin: 0 0 12px;
+    color: #6844c8;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+/* ============================================================
+   INICIO PÚBLICO - presentación principal
+   ============================================================ */
+
+h1 {
+    margin: 0 0 24px;
+    font-size: clamp(34px, 4vw, 54px);
+    line-height: 1.12;
+    letter-spacing: -1.5px;
+}
+
+.descripcion {
+    max-width: 510px;
+    margin-bottom: 28px;
+    color: #596581;
+    font-size: 17px;
+}
+
+.acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.presentacion-visual {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 340px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 45% 45% 30px 30px;
+
+    color: white;
+    text-align: center;
+    background: linear-gradient(140deg, #4bb9fb, #6755ed, #a16aef);
+    box-shadow: 0 25px 55px rgba(87, 65, 179, 0.2);
+}
+
+.huella-decorativa {
+    font-size: 90px;
+    line-height: 1.2;
+}
+
+.presentacion-visual p {
+    margin-bottom: 0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+/* ============================================================
+   INICIO PÚBLICO - accesos, servicios, misión, visión y objetivos
+   ============================================================ */
+
+.seccion {
+    padding-block: 65px;
+}
+
+h2 {
+    margin: 0 0 24px;
+    font-size: clamp(26px, 3vw, 34px);
+    line-height: 1.25;
+    letter-spacing: -0.7px;
+}
+
+.introduccion {
+    margin-top: -10px;
+    margin-bottom: 28px;
+    color: #65708b;
+}
+
+.rejilla {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.tarjeta {
+    padding: 28px;
+    border: 1px solid #e9e5f5;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 8px 25px rgba(36, 35, 90, 0.04);
+}
+
+.icono {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-size: 32px;
+}
+
+.tarjeta h3 {
+    margin: 0 0 12px;
+    font-size: 20px;
+}
+
+.tarjeta p,
+.lista-objetivos {
+    color: #65708b;
+    font-size: 15px;
+}
+
+.tarjeta a {
+    display: inline-block;
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    text-underline-offset: 4px;
+}
+
+.lista-objetivos {
+    padding-left: 20px;
+}
+
+.lista-objetivos li {
+    margin-bottom: 8px;
+}
+
+.seccion-suave {
+    background: #f7f8fd;
+}
+
+/* ============================================================
+   INICIO PÚBLICO - invitación y pie
+   ============================================================ */
+
+.invitacion {
+    padding-block: 55px;
+    background: #eeeaff;
+    text-align: center;
+}
+
+.invitacion h2 {
+    margin-bottom: 12px;
+}
+
+.invitacion p {
+    margin-bottom: 24px;
+    color: #596581;
+}
+
+.pie {
+    padding-block: 35px;
+    background: #172044;
+    color: #d7ddf3;
+}
+
+.pie-contenido {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+}
+
+/* ============================================================
+   INICIO PÚBLICO - navegación y marca
+   ============================================================ */
+
+.pie .marca {
+    color: #ffffff;
+}
+
+/* ============================================================
+   INICIO PÚBLICO - invitación y pie
+   ============================================================ */
+
+.pie nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.pie a {
+    color: #e0dcff;
+    font-size: 14px;
+    text-underline-offset: 4px;
+}
+
+/* ============================================================
+   INICIO PÚBLICO - navegación y marca - adaptación y movimiento
+   ============================================================ */
+
+@media (max-width: 850px) {
+    .navegacion,
+        .pie-contenido {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* ============================================================
+   INICIO PÚBLICO - presentación principal - adaptación y movimiento
+   ============================================================ */
+
+@media (max-width: 850px) {
+    .presentacion-contenido {
+        grid-template-columns: 1fr;
+        gap: 35px;
+    }
+}
+
+@media (max-width: 850px) {
+    .presentacion-visual {
+        min-height: 260px;
+    }
+}
+
+/* ============================================================
+   INICIO PÚBLICO - accesos, servicios, misión, visión y objetivos - adaptación y movimiento
+   ============================================================ */
+
+@media (max-width: 850px) {
+    .rejilla {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================
+   INICIO PÚBLICO - navegación y marca - adaptación y movimiento
+   ============================================================ */
+
+@media (max-width: 480px) {
+    .menu {
+        gap: 16px;
+    }
+}
+
+/* ============================================================
+   INICIO PÚBLICO - presentación principal - adaptación y movimiento
+   ============================================================ */
+
+@media (max-width: 480px) {
+    .presentacion {
+        padding-block: 45px;
+    }
+}
+
+/* ============================================================
+   INICIO PÚBLICO - accesos, servicios, misión, visión y objetivos - adaptación y movimiento
+   ============================================================ */
+
+@media (max-width: 480px) {
+    .seccion {
+        padding-block: 45px;
+    }
+}
+
+/* ============================================================
+   INICIO PÚBLICO - base, botones y accesibilidad - adaptación y movimiento
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .boton {
+        transition: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .boton:hover {
+        transform: none;
+    }
+}
+
+/* ============================================================
+   INICIO PÚBLICO - presentación principal
+   ============================================================ */
+
+/* Imagen: ../img/su cuidado.jpeg. Ruta relativa a assets/css/. */
+.presentacion-visual {
+    justify-content: flex-end;
+    background-image:
+    linear-gradient(to top, rgba(23, 32, 68, 0.9), transparent 75%),
+    url("../img/su cuidado.jpeg");
+    background-size: cover;
+    background-position: center;
+}
+
+.presentacion-visual p {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+   INICIO PÚBLICO - imágenes decorativas de tarjetas
+   ============================================================ */
+
+.tarjeta-imagen {
+    padding-top: 190px;
+    background-image:
+    linear-gradient(to bottom, transparent 100px, rgba(255,255,255,0.95) 175px, #ffffff 205px),
+    var(--imagen-tarjeta);
+    background-size: 100% 100%, 100% 180px;
+    background-position: top, center top;
+    background-repeat: no-repeat;
+}
+
+/* Imagen: ../img/mis mascotas.jpeg. Ruta relativa a assets/css/. */
+.tarjeta-mascotas {
+    --imagen-tarjeta: url("../img/mis mascotas.jpeg");
+}
+
+/* Imagen: ../img/unete a nuestra comunidad.jpeg. Ruta relativa a assets/css/. */
+.tarjeta-comunidad {
+    --imagen-tarjeta: url("../img/unete a nuestra comunidad.jpeg");
+}
+
+/* Imagen: ../img/area del personal.jpeg. Ruta relativa a assets/css/. */
+.tarjeta-personal {
+    --imagen-tarjeta: url("../img/area del personal.jpeg");
+}
+
+/* Imagen: ../img/consulta veterinaria.jpeg. Ruta relativa a assets/css/. */
+.tarjeta-consulta {
+    --imagen-tarjeta: url("../img/consulta veterinaria.jpeg");
+}
+
+/* Imagen: ../img/registro de mascotas.jpeg. Ruta relativa a assets/css/. */
+.tarjeta-registro {
+    --imagen-tarjeta: url("../img/registro de mascotas.jpeg");
+}
+
+/* Imagen: ../img/atencion preventiva.jpeg. Ruta relativa a assets/css/. */
+.tarjeta-preventiva {
+    --imagen-tarjeta: url("../img/atencion preventiva.jpeg");
+}

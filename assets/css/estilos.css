@@ -1,0 +1,467 @@
+/* ============================================================
+   estilos.css
+   Base compartida de login.php, registro.php, recuperar-contrasena.php y cambiar-contrasena.php.
+   ============================================================ */
+
+/* ============================================================
+   COMPARTIDO ACCESO - fondo, tarjeta y presentación
+   ============================================================ */
+
+* {
+    box-sizing: border-box;
+}
+
+.pagina-login {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #101b50;
+    animation: cambiar-fondo 18s ease infinite;
+    position: relative;
+    isolation: isolate;
+    background:
+    radial-gradient(
+    ellipse at 0% 10%,
+    rgba(75, 228, 255, 0.95),
+    transparent 48%
+    ),
+    radial-gradient(
+    ellipse at 100% 15%,
+    rgba(188, 142, 255, 0.85),
+    transparent 45%
+    ),
+    radial-gradient(
+    ellipse at 90% 100%,
+    rgba(39, 197, 255, 0.9),
+    transparent 45%
+    ),
+    linear-gradient(
+    125deg,
+    #268df5 0%,
+    #3459ed 40%,
+    #4826dc 75%,
+    #824af3 100%
+    );
+    background-size: 130% 130%;
+}
+
+@keyframes cambiar-fondo {
+    0% {
+    background-position: 0% 50%;
+    }
+
+    50% {
+    background-position: 100% 50%;
+    }
+
+    100% {
+    background-position: 0% 50%;
+    }
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - fondo, tarjeta y presentación - adaptación y movimiento
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .pagina-login {
+        animation: none;
+    }
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - fondo, tarjeta y presentación
+   ============================================================ */
+
+.tarjeta-login {
+    width: 100%;
+    max-width: 400px;
+    padding: 28px;
+    border-radius: 28px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.82),
+    rgba(245, 240, 255, 0.7)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow:
+    0 24px 70px rgba(31, 25, 135, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.login-encabezado {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.login-logo {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 16px;
+
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 34px;
+    background: linear-gradient(135deg, #a078ff, #5930ec);
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(89, 48, 236, 0.22);
+}
+
+.login-encabezado h1 {
+    margin: 0 0 16px;
+    font-size: clamp(22px, 5vw, 26px);
+    letter-spacing: -0.8px;
+}
+
+.login-encabezado h2 {
+    margin: 0 0 8px;
+    font-size: 22px;
+}
+
+.login-encabezado p {
+    margin: 0;
+    color: #58618f;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - campos de login, registro y contraseñas
+   ============================================================ */
+
+.campo {
+    margin-bottom: 20px;
+}
+
+.campo label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.campo input {
+    width: 100%;
+    min-height: 50px;
+    padding: 14px 16px;
+
+    font: inherit;
+    font-size: 15px;
+    color: #101b50;
+
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #c8cdf0;
+    border-radius: 12px;
+
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.campo input::placeholder {
+    color: #747ca0;
+}
+
+.campo input:focus {
+    outline: none;
+    border-color: #7355ed;
+    box-shadow: 0 0 0 4px rgba(115, 85, 237, 0.15);
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - fondo, tarjeta y presentación
+   ============================================================ */
+
+.boton-login {
+    width: 100%;
+    min-height: 52px;
+    margin-top: 4px;
+    padding: 14px 20px;
+
+    font: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    color: #ffffff;
+
+    background: linear-gradient(110deg, #2297fb, #643cff, #983fff);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+
+    box-shadow: 0 8px 22px rgba(100, 60, 255, 0.25);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.boton-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(100, 60, 255, 0.35);
+}
+
+.boton-login:focus-visible {
+    outline: 3px solid #342080;
+    outline-offset: 4px;
+}
+
+.boton-login:active {
+    transform: translateY(0);
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - enlaces y pie de los formularios
+   ============================================================ */
+
+.login-pie {
+    margin: 22px 0 0;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #58618f;
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - fondo, tarjeta y presentación - adaptación y movimiento
+   ============================================================ */
+
+@media (max-width: 480px) {
+    .pagina-login {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tarjeta-login {
+        padding: 28px 22px;
+    }
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - fondo, tarjeta y presentación
+   ============================================================ */
+
+.capa-huellas {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - huellas animadas
+   ============================================================ */
+
+.huella {
+    position: absolute;
+    width: 38px;
+    height: 44px;
+    color: #f080eafd;
+    opacity: 0;
+
+    transform: translate(-50%, -50%) rotate(var(--angulo));
+    animation: marcar-paso 3.6s ease-out forwards;
+}
+
+.huella svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes marcar-paso {
+    0% {
+    opacity: 0;
+    }
+
+    12% {
+    opacity: 0.42;
+    }
+
+    55% {
+    opacity: 0.25;
+    }
+
+    100% {
+    opacity: 0;
+    }
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - fondo, tarjeta y presentación - adaptación y movimiento
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .capa-huellas {
+        display: none;
+    }
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - ondas decorativas
+   ============================================================ */
+
+.fondo-ondas {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -2;
+}
+
+.fondo-ondas svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.borde-onda {
+    fill: none;
+    stroke: rgba(225, 245, 255, 0.55);
+    stroke-width: 1.5;
+}
+
+.ondas-superiores,
+.ondas-centrales,
+.ondas-inferiores {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: flotar-ondas 16s ease-in-out infinite alternate;
+}
+
+.ondas-centrales {
+    animation-duration: 21s;
+    animation-delay: -7s;
+}
+
+.ondas-inferiores {
+    animation-duration: 18s;
+    animation-delay: -11s;
+}
+
+@keyframes flotar-ondas {
+    from {
+    transform: translate(-18px, -16px) scale(1.04);
+    }
+
+    to {
+    transform: translate(18px, 22px) scale(1.08);
+    }
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - ondas decorativas - adaptación y movimiento
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .ondas-superiores,
+        .ondas-centrales,
+        .ondas-inferiores {
+        animation: none;
+    }
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - enlaces y pie de los formularios
+   ============================================================ */
+
+.login-enlaces {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 20px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.login-enlaces a {
+    color: #5136b5;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    text-underline-offset: 4px;
+}
+
+.login-enlaces a:hover {
+    text-decoration: underline;
+}
+
+.login-enlaces a:focus-visible {
+    outline: 2px solid #5136b5;
+    outline-offset: 4px;
+    border-radius: 3px;
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - títulos con cola decorativa, sin orejas
+   ============================================================ */
+
+.titulo-animal {
+    padding: 15px 16px 0;
+    overflow: visible;
+}
+
+.letra-cola {
+    position: relative;
+    display: inline-block;
+}
+
+.letra-cola::after {
+    content: "";
+    position: absolute;
+    left: calc(100% - 1px);
+    bottom: 3px;
+
+    width: 17px;
+    height: 24px;
+
+    border: 3px solid currentColor;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+
+    transform: rotate(25deg);
+    transform-origin: bottom left;
+    animation: mover-colita 3s ease-in-out infinite;
+}
+
+@keyframes mover-colita {
+    0%,
+    100% {
+    transform: rotate(25deg);
+    }
+
+    50% {
+    transform: rotate(43deg);
+    }
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - títulos con cola decorativa, sin orejas - adaptación y movimiento
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .letra-cola::after {
+        animation: none;
+    }
+}
+
+/* ============================================================
+   COMPARTIDO ACCESO - ayudas de campos
+   ============================================================ */
+
+.campo-ayuda {
+    display: block;
+    margin-top: 7px;
+    color: #58618f;
+    font-size: 12px;
+    line-height: 1.5;
+}

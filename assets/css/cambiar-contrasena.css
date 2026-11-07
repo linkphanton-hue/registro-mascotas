@@ -1,0 +1,47 @@
+/* ============================================================
+   cambiar-contrasena.css
+   Exclusivo de cambiar-contrasena.php. Cargar después de estilos.css.
+   ============================================================ */
+
+/* ============================================================
+   CAMBIAR CONTRASEÑA - visibilidad y mensajes
+   ============================================================ */
+
+.opcion-mostrar {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 18px;
+
+    color: #58618f;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.opcion-mostrar input {
+    width: 16px;
+    height: 16px;
+    accent-color: #7355ed;
+}
+
+.mensaje-formulario {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.mensaje-formulario:not(:empty) {
+    margin-bottom: 18px;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.mensaje-formulario.error {
+    color: #9d1c34;
+    background: #fff0f2;
+}
+
+.mensaje-formulario.informacion {
+    color: #314783;
+    background: #edf3ff;
+}

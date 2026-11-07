@@ -1,0 +1,76 @@
+/* ============================================================
+   cliente-mascotas.css
+   Exclusivo de cliente/panel.php y cliente/mis-mascotas.php. Cargar después de panel.css.
+   ============================================================ */
+
+/* ============================================================
+   MASCOTAS DEL CLIENTE - tarjetas de Inicio y Mis mascotas
+   ============================================================ */
+
+.rejilla-mascotas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.tarjeta-mascota {
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #e9eaf4;
+    border-radius: 20px;
+    box-shadow: 0 6px 20px rgba(30, 35, 80, 0.03);
+}
+
+.mascota-ilustracion {
+    display: grid;
+    place-items: center;
+    min-height: 155px;
+
+    background: linear-gradient(135deg, #e0f3ff, #e9e5ff);
+    font-size: 75px;
+}
+
+.mascota-ilustracion-gato {
+    background: linear-gradient(135deg, #f0e4ff, #ffe9ef);
+}
+
+.mascota-informacion {
+    padding: 22px;
+}
+
+.mascota-informacion h3 {
+    margin: 0 0 15px;
+    font-size: 22px;
+}
+
+.datos-mascota {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0;
+}
+
+.datos-mascota dt {
+    margin-bottom: 4px;
+    color: #8189a0;
+    font-size: 12px;
+}
+
+.datos-mascota dd {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* ============================================================
+   MIS MASCOTAS - listado sin coincidencias
+   ============================================================ */
+
+.estado-vacio {
+    padding: 35px 20px;
+    color: #65708b;
+    text-align: center;
+    background: #ffffff;
+    border: 1px dashed #c9c5e3;
+    border-radius: 18px;
+}

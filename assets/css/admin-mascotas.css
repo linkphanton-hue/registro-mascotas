@@ -1,0 +1,19 @@
+/* ============================================================
+   admin-mascotas.css
+   Exclusivo de admin/mascotas.php.
+   ============================================================ */
+
+/* ============================================================
+   MASCOTAS ADMINISTRADOR - eliminación y resultados vacíos
+   ============================================================ */
+
+.accion-eliminar {
+    color: #a42a43;
+    background: #ffedf1;
+    border-color: #f6d1da;
+}
+
+#listado-vacio td {
+    padding-block: 35px;
+    text-align: center;
+}
