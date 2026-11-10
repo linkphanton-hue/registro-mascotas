@@ -2,7 +2,7 @@
 
 Asignatura: SOF-109  
 Proyecto: Registro de Mascotas  
-Última actualización: 28 de octubre de 2026
+Última actualización: 9 de noviembre de 2026
 
 ## Planificación y estructura inicial
 
@@ -153,3 +153,109 @@ Tengo preparadas las pantallas públicas y las áreas del cliente y del administ
 
 ### Mi siguiente paso
 Continuar con `admin/formulario-mascota.php`, incluyendo nombre, especie, edad positiva y selección del dueño. Después revisaré los formularios antes de comenzar la etapa de MySQL.
+
+## 9 de noviembre de 2026 - Conexión de base de datos, ejecución web y formulario de mascotas (David)
+
+### Mi objetivo
+Retomar el proyecto en un nuevo entorno de trabajo mediante control de versiones, vincular la base de datos MySQL con PDO, desplegar la aplicación en el servidor local y construir el formulario administrativo de mascotas con sus validaciones.
+
+### Mi avance
+Cloné el repositorio de trabajo y creé la rama `feature/mi-primer-aporte` para trabajar sin afectar `main`. Preparé la estructura inicial de la base de datos `registro_mascotas` en `db/import.sql` con las tablas `usuarios` y `mascotas`, cargué los registros iniciales de prueba en MySQL e implementé la conexión centralizada en `includes/conexion.php`.
+
+Vinculé el proyecto al directorio de publicación de XAMPP y comprobé que todas las pantallas principales respondieran en el navegador. A continuación, construí `admin/formulario-mascota.php` manteniendo el diseño de los formularios administrativos y añadí `assets/js/formulario-mascota.js` para validar los datos antes del envío.
+
+### Resultados registrados en la revisión
+- Rama `feature/mi-primer-aporte` creada y base de datos `registro_mascotas` activa en MySQL.
+- Conexión PDO en `includes/conexion.php` verificada sin advertencias ni errores.
+- `admin/formulario-mascota.php` y `assets/js/formulario-mascota.js` probados en navegador con respuestas HTTP 200 OK.
+
+### Lo que aprendí
+Configurar PDO con manejo controlado de excepciones permite detectar fallos de conexión de forma temprana sin exponer errores internos al usuario ni interrumpir bruscamente la interfaz.
+
+### Mi siguiente paso
+Proteger las credenciales de conexión, incorporar el borrado lógico en la base de datos y conectar el guardado y listado real de mascotas mediante consultas preparadas.
+
+## 9 de noviembre de 2026 - Auditoría de código, seguridad de credenciales, borrado lógico y persistencia PDO
+
+### Mi objetivo
+Auditar el código existente sin alterar la interfaz visual, aislar las credenciales de la base de datos, incorporar el borrado lógico y conectar tanto el alta como el listado de mascotas con MySQL.
+
+### Mi avance
+Revisé todas las carpetas del proyecto y corregí en `assets/js/formulario-mascota.js` el bloqueo que impedía enviar formularios válidos al servidor. Separé las credenciales de conexión en `includes/config.php` y añadí este archivo a `.gitignore` para no exponer contraseñas en el repositorio.
+
+Actualicé `db/import.sql` y las tablas activas `usuarios` y `mascotas` en MySQL para agregar la columna `estado` y habilitar el borrado lógico. Finalmente, conecté `admin/formulario-mascota.php` para validar y guardar mascotas mediante método `POST` y consultas preparadas, y actualicé `admin/mascotas.php` para listar dinámicamente las mascotas activas junto al nombre de su dueño. Las explicaciones técnicas detalladas de PDO y del borrado lógico quedaron documentadas en `docs/manual.md`.
+
+### Resultados registrados en la revisión
+- 20 archivos PHP verificados sin errores de sintaxis.
+- Credenciales aisladas en `includes/config.php` y excluidas en `.gitignore`.
+- Registro y listado dinámico de mascotas activos verificados en `http://localhost:8000`.
+
+### Lo que aprendí
+Aislar las credenciales fuera del control de versiones protege el entorno de trabajo al compartir código, y combinar la validación del navegador con consultas preparadas en el servidor asegura que solo ingresen datos íntegros a la base de datos.
+
+### Mi siguiente paso
+Completar el módulo administrativo de clientes, habilitar la edición y baja lógica de mascotas, e implementar el inicio de sesión y permisos por rol.
+
+## 9 de noviembre de 2026 - Gestión completa de clientes y mascotas, edición, borrado lógico y sesiones por rol (David)
+
+### Mi objetivo
+Conectar el CRUD administrativo de clientes, la edición y borrado lógico de mascotas, el panel de indicadores, la autenticación de usuarios con sesiones por rol y las vistas privadas del cliente.
+
+### Mi avance
+Conecté `admin/formulario-cliente.php` y `admin/clientes.php` con MySQL para permitir registrar y editar clientes con contraseñas cifradas y mostrar el conteo real de mascotas activas por dueño. En `admin/formulario-mascota.php` y `admin/mascotas.php` habilité la edición por identificador y el borrado lógico mediante `POST`, y actualicé `admin/panel.php` para mostrar conteos reales desde la base de datos.
+
+Implementé el inicio de sesión en `login.php`, el registro público en `registro.php`, el cambio de clave en `cambiar-contrasena.php`, la validación de acceso por rol en `includes/sesion.php` y la carga dinámica de datos en `cliente/panel.php`, `cliente/mis-mascotas.php` y `cliente/perfil.php`.
+
+### Resultados registrados en la revisión
+- Rutas privadas de `admin/` y `cliente/` protegidas según el rol activo de la sesión.
+- Inicio de sesión, registro de clientes, edición y baja lógica de mascotas verificados mediante peticiones `POST` contra MySQL.
+
+### Lo que aprendí
+Probar los flujos completos con sesiones reales y envíos `POST` permite confirmar que los permisos de cada rol y la actualización de registros funcionen de extremo a extremo más allá de una revisión estática.
+
+### Mi siguiente paso
+Incorporar mejoras de experiencia visual (Modo Oscuro, colores por módulo, notificaciones flotantes y estados vacíos), edad detallada en años y meses, y la página pública de contacto.
+
+## 9 de noviembre de 2026 - Modo oscuro, identidad por módulos, notificaciones Toast, estados vacíos, edad detallada y sección de contacto (David)
+
+### Mi objetivo
+Elevar la experiencia visual y de interacción del sistema incorporando Modo Oscuro persistente, acentos de color por módulo, notificaciones flotantes (Toasts), estados vacíos ilustrados, edad en años y meses y una página de contacto conectada a la base de datos.
+
+### Mi avance
+Creé `assets/css/tema.css` y `assets/js/interfaz.js` para habilitar el cambio entre Modo Claro y Modo Oscuro con preferencia guardada en `localStorage`, diferenciar visualmente cada sección del sistema mediante colores de acento por módulo y añadir microinteracciones de elevación en las tarjetas. También implementé notificaciones flotantes (Toasts) y la confirmación de baja en dos clics para evitar alertas nativas del navegador, además de estados vacíos ilustrados cuando una tabla o filtro no tiene resultados. Toda la estructura de variables y componentes CSS se documentó en `docs/organizacion-estilos.md`.
+
+Actualicé la base de datos y `admin/formulario-mascota.php` junto con `includes/formato.php` para registrar y mostrar la edad en años y meses, y construí la pantalla `contacto.php` conectada a la tabla `mensajes_contacto`.
+
+### Resultados registrados en la revisión
+- Cambio de tema claro/oscuro con persistencia en `localStorage` y notificaciones Toast comprobados en los paneles y formularios.
+- Registro de edad en años y meses y envío de mensajes en `contacto.php` verificados en MySQL.
+
+### Lo que aprendí
+Organizar las variables de color y los estados interactivos en una hoja transversal permite renovar la apariencia y usabilidad de todo el sistema sin alterar la estructura HTML ni duplicar reglas en cada archivo CSS.
+
+### Mi siguiente paso
+Realizar una auditoría final de seguridad y QA, integrar el campo manual de Raza en todo el flujo de mascotas y reorganizar la documentación técnica del proyecto.
+
+## 9 de noviembre de 2026 - Auditoría final de seguridad, integración completa del campo Raza y reorganización documental (David)
+
+### Mi objetivo
+Cerrar la jornada auditando la seguridad de las sesiones, revirtiendo cualquier cambio estructural sobre el HTML original, integrando la captura y visualización dinámica del campo "Raza" en mascotas y reorganizando la documentación de hoy en la carpeta `docs/`.
+
+### Mi avance
+Reforcé `includes/sesion.php` y creé `logout.php` para validar en cada petición que el usuario autenticado siga activo en la base de datos con el rol correspondiente y pueda cerrar su sesión de forma segura. Eliminé cualquier respaldo de cliente por defecto en `cliente/perfil.php` y `cambiar-contrasena.php`, y verifiqué que todas las pantallas respeten íntegramente el diseño HTML original.
+
+Para garantizar la congruencia del dato de raza en todo el sistema, aseguré la columna `raza` en `db/import.sql` y en la tabla `mascotas` de MySQL, agregué el campo de texto `<input type="text" id="raza" name="raza">` en `admin/formulario-mascota.php` y actualicé las consultas preparadas (`INSERT` y `UPDATE`) para recibir y guardar `:raza`. Asimismo, actualicé `admin/mascotas.php` y verifiqué `cliente/panel.php` y `cliente/mis-mascotas.php` para que impriman dinámicamente la raza almacenada en la base de datos.
+
+Finalmente, audité y reorganicé la documentación de hoy sin tocar los registros de fechas anteriores: trasladé el detalle de variables CSS, Modo Oscuro, colores por módulo y Toasts a `docs/organizacion-estilos.md`; incorporé la explicación técnica de PDO, borrado lógico, sesiones por rol y el campo Raza en `docs/manual.md`; actualicé el avance general en `docs/estado-proyecto.md` y sinteticé las entradas de hoy en esta bitácora.
+
+### Resultados registrados en la revisión
+- 25 archivos PHP verificados con `php -l` sin errores de sintaxis.
+- Alta y edición de mascotas con el nuevo campo `raza` verificadas mediante `POST` en `admin/formulario-mascota.php`, comprobando su visualización dinámica en `admin/mascotas.php`, `cliente/panel.php` y `cliente/mis-mascotas.php`.
+- Protección de sesiones por rol, cierre en `logout.php` y fidelidad al HTML original comprobados en todas las vistas.
+- Documentación de `docs/organizacion-estilos.md`, `docs/manual.md`, `docs/estado-proyecto.md` y `docs/bitacora.md` reorganizada conservando intacto todo el historial previo al 9 de noviembre de 2026.
+
+### Lo que aprendí
+Mantener la congruencia de un dato desde la columna en MySQL hasta el formulario administrativo y las vistas del cliente evita inconsistencias entre paneles. Asimismo, separar en la documentación las especificaciones técnicas (`manual.md` y `organizacion-estilos.md`) de la narrativa de trabajo (`bitacora.md`) facilita tanto el mantenimiento del código como la lectura del historial del proyecto.
+
+### Estado al cierre del día
+El sistema de Registro de Mascotas queda completamente funcional en su base de datos, backend con PDO, CRUD de clientes y mascotas (con raza y edad en años y meses), autenticación y sesiones por rol, interfaz con Modo Oscuro y notificaciones Toast, y documentación actualizada al 9 de noviembre de 2026.

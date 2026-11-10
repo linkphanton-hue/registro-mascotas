@@ -1,3 +1,84 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/includes/conexion.php';
+
+$mensajeTexto = '';
+$mensajeTipo = '';
+$valores = [
+    'nombre' => '',
+    'correo' => '',
+];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nombre       = trim((string) ($_POST['nombre'] ?? ''));
+    $correo       = trim((string) ($_POST['correo'] ?? ''));
+    $contrasena   = (string) ($_POST['contrasena'] ?? '');
+    $confirmacion = (string) ($_POST['confirmar_contrasena'] ?? '');
+
+    $valores['nombre'] = $nombre;
+    $valores['correo'] = $correo;
+
+    $correoValido = filter_var($correo, FILTER_VALIDATE_EMAIL);
+
+    if (!$pdo) {
+        $mensajeTexto = $errorConexion ?? 'No se pudo conectar con la base de datos.';
+        $mensajeTipo = 'error';
+    } elseif ($nombre === '' || mb_strlen($nombre) > 100) {
+        $mensajeTexto = 'Escribe tu nombre completo (sin estar compuesto solo por espacios).';
+        $mensajeTipo = 'error';
+    } elseif ($correoValido === false || mb_strlen($correo) > 254) {
+        $mensajeTexto = 'Ingresa un correo electrónico válido.';
+        $mensajeTipo = 'error';
+    } elseif (mb_strlen($contrasena) < 8) {
+        $mensajeTexto = 'La contraseña debe tener al menos 8 caracteres.';
+        $mensajeTipo = 'error';
+    } elseif ($contrasena !== $confirmacion) {
+        $mensajeTexto = 'Las contraseñas no coinciden.';
+        $mensajeTipo = 'error';
+    } else {
+        try {
+            $stmtVerificar = $pdo->prepare(
+                "SELECT id FROM usuarios WHERE correo = :correo LIMIT 1"
+            );
+            $stmtVerificar->execute([':correo' => $correo]);
+
+            if ($stmtVerificar->fetch()) {
+                $mensajeTexto = 'Ya existe una cuenta registrada con ese correo electrónico.';
+                $mensajeTipo = 'error';
+            } else {
+                $hash = password_hash($contrasena, PASSWORD_DEFAULT);
+                $stmtInsertar = $pdo->prepare(
+                    "INSERT INTO usuarios (nombre, correo, contrasena, rol, estado) VALUES (:nombre, :correo, :contrasena, :rol, :estado)"
+                );
+                $stmtInsertar->execute([
+                    ':nombre'     => $nombre,
+                    ':correo'     => $correo,
+                    ':contrasena' => $hash,
+                    ':rol'        => 'cliente',
+                    ':estado'     => 'Activo',
+                ]);
+
+                $nuevoId = (int) $pdo->lastInsertId();
+                session_regenerate_id(true);
+                $_SESSION['usuario_id']     = $nuevoId;
+                $_SESSION['usuario_nombre'] = $nombre;
+                $_SESSION['usuario_correo'] = $correo;
+                $_SESSION['usuario_rol']    = 'cliente';
+
+                header('Location: cliente/panel.php');
+                exit;
+            }
+        } catch (PDOException $e) {
+            error_log('Error al registrar cuenta en registro.php: ' . $e->getMessage());
+            $mensajeTexto = 'Ocurrió un error al crear tu cuenta. Inténtalo nuevamente.';
+            $mensajeTipo = 'error';
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,13 +87,26 @@
 
     <title>Crear cuenta | Cuidado de tus Mascotas</title>
 
+    <script>
+        try {
+            if (localStorage.getItem('tema-preferido') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {}
+    </script>
+
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="assets/css/estilos.css?v=<?= filemtime(__DIR__ . '/assets/css/estilos.css') ?>">
+    <link rel="stylesheet" href="assets/css/tema.css?v=<?= filemtime(__DIR__ . '/assets/css/tema.css') ?>">
     <!-- defer espera a que el HTML exista antes de conectar filtros y validaciones. -->
+    <script src="assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/assets/js/interfaz.js') ?>" defer></script>
     <script src="assets/js/principal.js" defer></script>
 </head>
-<body class="pagina-login">
+<body
+    class="pagina-login"
+    <?= $mensajeTexto !== '' ? 'data-toast-mensaje="' . htmlspecialchars($mensajeTexto, ENT_QUOTES, 'UTF-8') . '" data-toast-tipo="' . htmlspecialchars($mensajeTipo, ENT_QUOTES, 'UTF-8') . '"' : '' ?>
+>
 
 <!-- Fondo decorativo con ondas. -->
 <div class="fondo-ondas" aria-hidden="true">
@@ -112,7 +206,7 @@
         <p>Un espacio para cuidar de tus mascotas</p>
     </header>
 
-    <form id="formulario-registro" method="post">
+    <form id="formulario-registro" method="post" action="registro.php">
         <div class="campo">
             <label for="nombre">Nombre completo</label>
 
@@ -123,6 +217,7 @@
                 placeholder="Escribe tu nombre"
                 autocomplete="name"
                 maxlength="100"
+                value="<?= htmlspecialchars($valores['nombre'], ENT_QUOTES, 'UTF-8') ?>"
                 required
             >
         </div>
@@ -137,6 +232,7 @@
                 placeholder="tu@correo.com"
                 autocomplete="email"
                 maxlength="254"
+                value="<?= htmlspecialchars($valores['correo'], ENT_QUOTES, 'UTF-8') ?>"
                 required
             >
         </div>
@@ -176,7 +272,7 @@
             >
         </div>
 
-        <button type="button" class="boton-login">
+        <button type="submit" class="boton-login">
             Crear cuenta
         </button>
     </form>

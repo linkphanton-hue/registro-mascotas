@@ -1,0 +1,568 @@
+/* ============================================================
+   tema.css
+   Variables de color, modo oscuro, acentos por módulo, microinteracciones,
+   notificaciones flotantes (toasts), confirmación en línea y estados vacíos.
+   ============================================================ */
+
+/* ============================================================
+   VARIABLES DE COLOR Y MODO OSCURO
+   ============================================================ */
+
+:root {
+    --color-fondo: #f5f6fc;
+    --color-fondo-suave: #f7f8fd;
+    --color-superficie: #ffffff;
+    --color-superficie-alt: #f8f9fe;
+    --color-superficie-destacada: #eeebfc;
+    --color-texto: #17234c;
+    --color-texto-secundario: #65708b;
+    --color-texto-tenue: #77819b;
+    --color-borde: #e8e9f4;
+    --color-borde-campo: #d9dcef;
+    --color-sombra: rgba(36, 35, 90, 0.06);
+    --color-sombra-elevada: rgba(76, 58, 145, 0.14);
+
+    /* Identidad por módulo (por defecto: panel principal en violeta) */
+    --acento-modulo: #7355ed;
+    --acento-modulo-suave: #f0ecff;
+    --acento-modulo-borde: #ded3fc;
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+    --color-fondo: #1e1e2f;
+    --color-fondo-suave: #222236;
+    --color-superficie: #252538;
+    --color-superficie-alt: #2d2d44;
+    --color-superficie-destacada: #2e294e;
+    --color-texto: #eef0ff;
+    --color-texto-secundario: #b4bcd8;
+    --color-texto-tenue: #8e97b8;
+    --color-borde: #353552;
+    --color-borde-campo: #414164;
+    --color-sombra: rgba(8, 8, 20, 0.35);
+    --color-sombra-elevada: rgba(8, 8, 20, 0.55);
+
+    --acento-modulo: #9f85ff;
+    --acento-modulo-suave: rgba(159, 133, 255, 0.16);
+    --acento-modulo-borde: rgba(159, 133, 255, 0.38);
+}
+
+/* ============================================================
+   IDENTIDAD POR MÓDULOS
+   ============================================================ */
+
+body[data-modulo="mascotas"] {
+    --acento-modulo: #0d9488;
+    --acento-modulo-suave: #e6f9f6;
+    --acento-modulo-borde: #99e6dc;
+}
+
+html[data-theme="dark"] body[data-modulo="mascotas"] {
+    --acento-modulo: #2dd4bf;
+    --acento-modulo-suave: rgba(45, 212, 191, 0.15);
+    --acento-modulo-borde: rgba(45, 212, 191, 0.38);
+}
+
+body[data-modulo="clientes"] {
+    --acento-modulo: #ea580c;
+    --acento-modulo-suave: #fff1e6;
+    --acento-modulo-borde: #fdba8c;
+}
+
+html[data-theme="dark"] body[data-modulo="clientes"] {
+    --acento-modulo: #fb923c;
+    --acento-modulo-suave: rgba(251, 146, 60, 0.16);
+    --acento-modulo-borde: rgba(251, 146, 60, 0.38);
+}
+
+/* Aplicación sutil del acento en etiquetas, iconos y borde superior de tarjetas */
+.etiqueta-seccion {
+    color: var(--acento-modulo);
+}
+
+.tarjeta-resumen > span,
+.acceso-icono {
+    background: var(--acento-modulo-suave);
+}
+
+.tarjeta-resumen,
+.acceso-admin,
+.tarjeta-mascota,
+.barra-filtros,
+.formulario-admin,
+.perfil-tarjeta {
+    border-top: 3px solid var(--acento-modulo);
+}
+
+/* ============================================================
+   APLICACIÓN DE VARIABLES Y TRANSICIÓN DE TEMA
+   ============================================================ */
+
+body,
+.pagina-panel {
+    color: var(--color-texto);
+    background-color: var(--color-fondo);
+}
+
+.cabecera,
+.barra-lateral,
+.tarjeta,
+.tarjeta-resumen,
+.acceso-admin,
+.barra-filtros,
+.tabla-contenedor,
+.formulario-admin,
+.tarjeta-mascota,
+.perfil-tarjeta,
+.estado-vacio {
+    background-color: var(--color-superficie);
+    border-color: var(--color-borde);
+}
+
+body,
+.cabecera,
+.barra-lateral,
+.tarjeta,
+.tarjeta-resumen,
+.acceso-admin,
+.barra-filtros,
+.tabla-contenedor,
+.formulario-admin,
+.tarjeta-mascota,
+.perfil-tarjeta,
+.perfil-seguridad,
+.seccion-suave {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.marca,
+.marca-panel,
+.acceso-admin,
+.tabla-admin tbody th {
+    color: var(--color-texto);
+}
+
+.descripcion,
+.introduccion,
+.descripcion-listado,
+.tarjeta p,
+.lista-objetivos,
+.acceso-admin p,
+.tabla-admin td,
+.menu-panel a,
+.volver-inicio,
+.perfil-seguridad p,
+.estado-vacio {
+    color: var(--color-texto-secundario);
+}
+
+.tarjeta-resumen p,
+.usuario-panel div > span,
+.perfil-presentacion p,
+.datos-mascota dt,
+.ayuda-formulario,
+.campo-admin small,
+.perfil-ayuda,
+#resultado-filtro,
+#resultado-clientes,
+.aviso-demostracion {
+    color: var(--color-texto-tenue);
+}
+
+.seccion-suave {
+    background-color: var(--color-fondo-suave);
+}
+
+.perfil-seguridad {
+    background-color: var(--color-superficie-destacada);
+    border-color: var(--acento-modulo-borde);
+}
+
+.campo-admin input,
+.campo-admin select,
+.campo-admin textarea,
+.grupo-filtro select,
+.grupo-filtro input[type="search"],
+.perfil-campo input {
+    color: var(--color-texto);
+    background-color: var(--color-superficie-alt);
+    border-color: var(--color-borde-campo);
+}
+
+.tabla-admin thead {
+    color: var(--color-texto-secundario);
+    background-color: var(--color-superficie-alt);
+}
+
+.tabla-admin th,
+.tabla-admin td,
+.perfil-presentacion {
+    border-bottom-color: var(--color-borde);
+}
+
+.tabla-admin tbody tr:hover {
+    background-color: var(--color-superficie-alt);
+}
+
+/* Ajustes específicos para modo oscuro en inicio público y pantallas de acceso */
+html[data-theme="dark"] .presentacion {
+    background:
+        radial-gradient(circle at 90% 20%, rgba(123, 67, 233, 0.25), transparent 45%),
+        linear-gradient(120deg, #1e1e2f, #262240);
+}
+
+html[data-theme="dark"] .invitacion {
+    background-color: #262240;
+}
+
+html[data-theme="dark"] .invitacion p,
+html[data-theme="dark"] .menu > a:not(.boton) {
+    color: var(--color-texto-secundario);
+}
+
+html[data-theme="dark"] .boton-secundario {
+    color: var(--color-texto);
+    background-color: var(--color-superficie);
+    border-color: var(--acento-modulo-borde);
+}
+
+html[data-theme="dark"] .tarjeta-imagen {
+    background-image:
+        linear-gradient(to bottom, transparent 100px, rgba(37, 37, 56, 0.96) 175px, #252538 205px),
+        var(--imagen-tarjeta);
+}
+
+html[data-theme="dark"] .marca-panel > span:first-child,
+html[data-theme="dark"] .avatar {
+    color: #c9b8ff;
+    background-color: #322c54;
+    border-color: var(--color-borde);
+}
+
+html[data-theme="dark"] .menu-panel a:hover {
+    color: #c9b8ff;
+    background-color: rgba(159, 133, 255, 0.14);
+}
+
+html[data-theme="dark"] .boton-cancelar {
+    color: var(--color-texto-secundario);
+    background-color: var(--color-superficie-alt);
+    border-color: var(--color-borde-campo);
+}
+
+html[data-theme="dark"] .accion-editar {
+    color: #d5c8ff;
+    background-color: rgba(123, 67, 233, 0.22);
+    border-color: rgba(159, 133, 255, 0.38);
+}
+
+html[data-theme="dark"] .accion-eliminar {
+    color: #fecdd3;
+    background-color: rgba(190, 18, 60, 0.25);
+    border-color: rgba(251, 113, 133, 0.4);
+}
+
+html[data-theme="dark"] .mascota-ilustracion {
+    background: linear-gradient(135deg, #23384e, #2f2a4f);
+}
+
+html[data-theme="dark"] .mascota-ilustracion-gato {
+    background: linear-gradient(135deg, #352849, #44263a);
+}
+
+html[data-theme="dark"] .tarjeta-login {
+    color: var(--color-texto);
+    background: linear-gradient(135deg, rgba(37, 37, 56, 0.9), rgba(30, 30, 47, 0.86));
+    border-color: rgba(159, 133, 255, 0.28);
+}
+
+html[data-theme="dark"] .login-encabezado p,
+html[data-theme="dark"] .login-pie,
+html[data-theme="dark"] .campo-ayuda,
+html[data-theme="dark"] .opcion-mostrar {
+    color: var(--color-texto-secundario);
+}
+
+html[data-theme="dark"] .login-enlaces a,
+html[data-theme="dark"] .enlace-volver,
+html[data-theme="dark"] .enlace-contrasena,
+html[data-theme="dark"] .encabezado-seccion a,
+html[data-theme="dark"] .acceso-enlace {
+    color: #b79eff;
+}
+
+html[data-theme="dark"] .campo input {
+    color: var(--color-texto);
+    background-color: rgba(25, 25, 40, 0.85);
+    border-color: var(--color-borde-campo);
+}
+
+html[data-theme="dark"] .mensaje-admin.error,
+html[data-theme="dark"] .mensaje-formulario.error {
+    color: #fecdd3;
+    background-color: rgba(159, 18, 57, 0.32);
+}
+
+html[data-theme="dark"] .mensaje-admin.informacion,
+html[data-theme="dark"] .mensaje-formulario.informacion {
+    color: #bfdbfe;
+    background-color: rgba(30, 64, 175, 0.32);
+}
+
+/* ============================================================
+   BOTÓN DE CAMBIO DE TEMA
+   ============================================================ */
+
+.boton-tema {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 13px;
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-texto-secundario);
+
+    background-color: var(--color-superficie-alt);
+    border: 1px solid var(--color-borde-campo);
+    border-radius: 10px;
+    cursor: pointer;
+
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.boton-tema:hover {
+    color: var(--acento-modulo);
+    border-color: var(--acento-modulo);
+}
+
+.barra-lateral .boton-tema {
+    width: 100%;
+    justify-content: center;
+    margin-top: 14px;
+}
+
+.volver-inicio + .volver-inicio {
+    margin-top: 0;
+    padding-top: 10px;
+}
+
+.pagina-login .boton-tema {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 5;
+    backdrop-filter: blur(10px);
+}
+
+/* ============================================================
+   MICROINTERACCIONES (HOVER EN TARJETAS)
+   ============================================================ */
+
+.tarjeta-resumen,
+.acceso-admin,
+.tarjeta-mascota,
+.tarjeta {
+    box-shadow: 0 6px 20px var(--color-sombra);
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        background-color 0.3s ease,
+        border-color 0.3s ease;
+}
+
+.tarjeta-resumen:hover,
+.acceso-admin:hover,
+.tarjeta-mascota:hover,
+.tarjeta:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 30px var(--color-sombra-elevada);
+}
+
+/* ============================================================
+   NOTIFICACIONES FLOTANTES (TOASTS)
+   ============================================================ */
+
+.contenedor-toasts {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 1000;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: min(380px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+
+    color: var(--color-texto);
+    background-color: var(--color-superficie);
+    border: 1px solid var(--color-borde);
+    border-left: 4px solid var(--acento-modulo);
+    border-radius: 14px;
+    box-shadow: 0 14px 34px var(--color-sombra-elevada);
+    font-size: 14px;
+    font-weight: 600;
+
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-exito {
+    border-left-color: #10b981;
+}
+
+.toast-error {
+    border-left-color: #ef4444;
+}
+
+/* Cuando JS está activo, los mensajes de formulario se presentan como toast */
+.js-activo .mensaje-admin,
+.js-activo .mensaje-formulario {
+    display: none;
+}
+
+/* Confirmación en línea para dar de baja sin usar confirm() nativo */
+.accion-tabla.confirmando {
+    color: #ffffff;
+    background-color: #dc2626;
+    border-color: #dc2626;
+}
+
+/* ============================================================
+   ESTADOS VACÍOS ILUSTRADOS (EMPTY STATES)
+   ============================================================ */
+
+.estado-vacio-ilustrado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 440px;
+    margin: 12px auto;
+    padding: 36px 26px;
+
+    text-align: center;
+    background-color: var(--color-superficie-alt);
+    border: 1px dashed var(--acento-modulo-borde);
+    border-radius: 20px;
+}
+
+.estado-vacio-icono {
+    display: grid;
+    place-items: center;
+    width: 68px;
+    height: 68px;
+    margin-bottom: 6px;
+
+    background-color: var(--acento-modulo-suave);
+    border-radius: 20px;
+    font-size: 34px;
+}
+
+.estado-vacio-ilustrado h3 {
+    margin: 0;
+    color: var(--color-texto);
+    font-size: 18px;
+}
+
+.estado-vacio-ilustrado p {
+    margin: 0;
+    color: var(--color-texto-secundario);
+    font-size: 14px;
+}
+
+/* ============================================================
+   EDAD DETALLADA (AÑOS Y MESES) Y PÁGINA DE CONTACTO
+   ============================================================ */
+
+.grupo-edad {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.subcampo-edad {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.subcampo-edad span {
+    color: var(--color-texto-secundario);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.contacto-rejilla {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 32px;
+    align-items: start;
+}
+
+.campo-admin textarea {
+    width: 100%;
+    min-height: 130px;
+    padding: 12px 14px;
+    resize: vertical;
+
+    font: inherit;
+    font-size: 14px;
+    border: 1px solid var(--color-borde-campo);
+    border-radius: 11px;
+}
+
+.campo-admin textarea:focus-visible {
+    outline: 3px solid #e2d9ff;
+    outline-offset: 2px;
+    border-color: var(--acento-modulo);
+}
+
+.campo-completo {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 850px) {
+    .contacto-rejilla {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body,
+    .cabecera,
+    .barra-lateral,
+    .tarjeta,
+    .tarjeta-resumen,
+    .acceso-admin,
+    .tarjeta-mascota,
+    .toast {
+        transition: none;
+    }
+
+    .tarjeta-resumen:hover,
+    .acceso-admin:hover,
+    .tarjeta-mascota:hover,
+    .tarjeta:hover {
+        transform: none;
+    }
+}
+

@@ -21,10 +21,8 @@ if (formularioCliente) {
     });
 
     formularioCliente.addEventListener("submit", (evento) => {
-        /* No envía datos mientras no exista el procesamiento PHP. */
-        evento.preventDefault();
-
         if (nombre.value.trim().length === 0) {
+            evento.preventDefault();
             mostrarMensajeCliente(
                 "Escribe el nombre del cliente; no puede contener solo espacios.",
                 "error"
@@ -35,6 +33,7 @@ if (formularioCliente) {
         }
 
         if (contrasena.value !== confirmacion.value) {
+            evento.preventDefault();
             mostrarMensajeCliente(
                 "Las contraseñas no coinciden.",
                 "error"
@@ -44,13 +43,6 @@ if (formularioCliente) {
             return;
         }
 
-        mostrarMensajeCliente(
-            "Validación completada. El cliente todavía no se ha guardado.",
-            "informacion"
-        );
-
-        /* Limpia las contraseñas después de la demostración. */
-        contrasena.value = "";
-        confirmacion.value = "";
+        /* Si todas las validaciones pasan, se permite el envío POST al servidor PHP. */
     });
 }

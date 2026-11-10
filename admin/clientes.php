@@ -1,3 +1,46 @@
+<?php
+require_once __DIR__ . '/../includes/sesion.php';
+requerirRol('admin', '../login.php');
+
+require_once __DIR__ . '/../includes/conexion.php';
+
+$clientes = [];
+$errorListado = '';
+
+if (!$pdo) {
+    $errorListado = $errorConexion ?? 'No se pudo conectar con la base de datos para consultar los clientes.';
+} else {
+    try {
+        $sql = "SELECT
+                    usuarios.id,
+                    usuarios.nombre,
+                    usuarios.correo,
+                    COUNT(mascotas.id) AS total_mascotas
+                FROM usuarios
+                LEFT JOIN mascotas
+                    ON mascotas.usuario_id = usuarios.id
+                   AND mascotas.estado = :estado_mascota
+                WHERE usuarios.rol = :rol
+                  AND usuarios.estado = :estado_usuario
+                GROUP BY usuarios.id, usuarios.nombre, usuarios.correo
+                ORDER BY usuarios.id ASC";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            ':estado_mascota' => 'Activo',
+            ':rol'            => 'cliente',
+            ':estado_usuario' => 'Activo',
+        ]);
+        $clientes = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        error_log('Error al consultar listado de clientes en admin/clientes.php: ' . $e->getMessage());
+        $errorListado = 'Ocurrió un error al obtener los clientes registrados.';
+    }
+}
+
+$totalClientes = count($clientes);
+$textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes === 1 ? 'cliente' : 'clientes');
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,20 +49,26 @@
 
     <title>Clientes | Administración | Cuidado de tus Mascotas</title>
 
-    <!-- Reutiliza el diseño general de los paneles. -->
-
-    <!-- Estilos específicos del administrador. -->
+    <script>
+        try {
+            if (localStorage.getItem('tema-preferido') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {}
+    </script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="../assets/css/panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/panel.css') ?>">
     <link rel="stylesheet" href="../assets/css/admin.css?v=<?= filemtime(__DIR__ . '/../assets/css/admin.css') ?>">
     <link rel="stylesheet" href="../assets/css/admin-clientes.css?v=<?= filemtime(__DIR__ . '/../assets/css/admin-clientes.css') ?>">
+    <link rel="stylesheet" href="../assets/css/tema.css?v=<?= filemtime(__DIR__ . '/../assets/css/tema.css') ?>">
     <!-- defer espera a que el HTML exista antes de conectar filtros y validaciones. -->
-    <script src="../assets/js/admin-clientes.js" defer></script>
+    <script src="../assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/../assets/js/interfaz.js') ?>" defer></script>
+    <script src="../assets/js/admin-clientes.js?v=<?= filemtime(__DIR__ . '/../assets/js/admin-clientes.js') ?>" defer></script>
 </head>
 
-<body class="pagina-panel">
+<body class="pagina-panel" data-modulo="clientes">
     <div class="estructura-panel">
 
         <!--
@@ -36,7 +85,7 @@
 
             <nav class="menu-panel" aria-label="Menú del administrador">
                 <!-- Solo la página actual lleva la clase activo. -->
-                <a href="panel.php" >
+                <a href="panel.php">
                     <span aria-hidden="true">⌂</span>
                     Inicio
                 </a>
@@ -55,6 +104,10 @@
             <a href="../index.php" class="volver-inicio">
                 ← Volver al sitio
             </a>
+
+            <a href="../logout.php" class="volver-inicio">
+                Cerrar sesión
+            </a>
         </aside>
 
         <main class="contenido-panel">
@@ -64,7 +117,6 @@
             <h1>Clientes</h1>
         </div>
 
-        <!-- Enlaza al formulario que construiremos después. -->
         <a href="formulario-cliente.php" class="boton-admin">
             + Registrar cliente
         </a>
@@ -90,7 +142,7 @@
         </div>
 
         <p id="resultado-clientes" role="status">
-            Mostrando 1 cliente
+            <?= htmlspecialchars($textoContadorInicial, ENT_QUOTES, 'UTF-8') ?>
         </p>
     </div>
 
@@ -122,37 +174,45 @@
                 <tbody>
                     <!--
                         data-cliente identifica las filas que se pueden buscar.
-                        Los datos son de ejemplo.
                     -->
-                    <tr data-cliente>
-                        <th scope="row" class="cliente-nombre">
-                            Laura Pérez
-                        </th>
+                    <?php foreach ($clientes as $cliente): ?>
+                        <tr data-cliente>
+                            <th scope="row" class="cliente-nombre">
+                                <?= htmlspecialchars($cliente['nombre'], ENT_QUOTES, 'UTF-8') ?>
+                            </th>
 
-                        <td class="cliente-correo">
-                            laura@example.com
-                        </td>
+                            <td class="cliente-correo">
+                                <?= htmlspecialchars($cliente['correo'], ENT_QUOTES, 'UTF-8') ?>
+                            </td>
 
-                        <td>2</td>
+                            <td><?= (int) $cliente['total_mascotas'] ?></td>
 
-                        <td>
-                            <div class="acciones-tabla">
-                                <!-- Se habilitará cuando implementemos la edición. -->
-                                <button
-                                    type="button"
-                                    class="accion-tabla accion-editar"
-                                    aria-label="Editar a Laura Pérez"
-                                    disabled
-                                >
-                                    Editar
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                            <td>
+                                <div class="acciones-tabla">
+                                    <button
+                                        type="button"
+                                        class="accion-tabla accion-editar"
+                                        aria-label="Editar a <?= htmlspecialchars($cliente['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+                                        onclick="window.location.href='formulario-cliente.php?id=<?= (int) $cliente['id'] ?>'"
+                                    >
+                                        Editar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
 
-                    <tr id="clientes-vacio" hidden>
+                    <tr id="clientes-vacio" <?= $totalClientes > 0 ? 'hidden' : '' ?>>
                         <td colspan="4">
-                            No se encontraron clientes con esa búsqueda.
+                            <div class="estado-vacio-ilustrado">
+                                <span class="estado-vacio-icono" aria-hidden="true">👥</span>
+                                <h3><?= $errorListado !== '' ? 'No se pudieron cargar los clientes' : 'Sin clientes para mostrar' ?></h3>
+                                <p>
+                                    <?= $errorListado !== ''
+                                        ? htmlspecialchars($errorListado, ENT_QUOTES, 'UTF-8')
+                                        : 'No se encontraron clientes con esa búsqueda.' ?>
+                                </p>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

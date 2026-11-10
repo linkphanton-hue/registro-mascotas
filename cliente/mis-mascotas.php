@@ -1,3 +1,59 @@
+<?php
+require_once __DIR__ . '/../includes/sesion.php';
+requerirRol('cliente', '../login.php');
+
+require_once __DIR__ . '/../includes/conexion.php';
+require_once __DIR__ . '/../includes/formato.php';
+
+$clienteId     = (int) $_SESSION['usuario_id'];
+$nombreCliente = trim((string) $_SESSION['usuario_nombre']);
+$inicialAvatar = mb_strtoupper(mb_substr($nombreCliente, 0, 1));
+$mascotas      = [];
+
+$etiquetasEspecie = [
+    'perro'  => 'Perro',
+    'gato'   => 'Gato',
+    'ave'    => 'Ave',
+    'conejo' => 'Conejo',
+    'otro'   => 'Otra especie',
+];
+
+if ($pdo) {
+    try {
+        $stmtCliente = $pdo->prepare(
+            "SELECT id, nombre FROM usuarios WHERE id = :id AND rol = :rol AND estado = :estado LIMIT 1"
+        );
+        $stmtCliente->execute([
+            ':id'     => $clienteId,
+            ':rol'    => 'cliente',
+            ':estado' => 'Activo',
+        ]);
+        $clienteActual = $stmtCliente->fetch();
+
+        if (!$clienteActual) {
+            destruirSesionYRedirigir('../login.php');
+        }
+
+        $clienteId     = (int) $clienteActual['id'];
+        $nombreCliente = trim((string) $clienteActual['nombre']);
+        $inicialAvatar = mb_strtoupper(mb_substr($nombreCliente, 0, 1));
+
+        $stmtMascotas = $pdo->prepare(
+            "SELECT id, nombre, especie, raza, edad_anios, edad_meses FROM mascotas WHERE usuario_id = :usuario_id AND estado = :estado ORDER BY id ASC"
+        );
+        $stmtMascotas->execute([
+            ':usuario_id' => $clienteId,
+            ':estado'     => 'Activo',
+        ]);
+        $mascotas = $stmtMascotas->fetchAll();
+    } catch (PDOException $e) {
+        error_log('Error al cargar mascotas del cliente en cliente/mis-mascotas.php: ' . $e->getMessage());
+    }
+}
+
+$totalMascotas = count($mascotas);
+$textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas === 1 ? 'mascota' : 'mascotas');
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,17 +62,25 @@
 
     <title>Mis mascotas | Cuidado de tus Mascotas</title>
 
-    <!-- Version automatica del CSS para cargar los estilos al guardar cambios. -->
+    <script>
+        try {
+            if (localStorage.getItem('tema-preferido') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {}
+    </script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="../assets/css/panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/panel.css') ?>">
     <link rel="stylesheet" href="../assets/css/cliente-mascotas.css?v=<?= filemtime(__DIR__ . '/../assets/css/cliente-mascotas.css') ?>">
+    <link rel="stylesheet" href="../assets/css/tema.css?v=<?= filemtime(__DIR__ . '/../assets/css/tema.css') ?>">
     <!-- defer espera a que el HTML exista antes de conectar filtros y validaciones. -->
-    <script src="../assets/js/mascotas.js" defer></script>
+    <script src="../assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/../assets/js/interfaz.js') ?>" defer></script>
+    <script src="../assets/js/mascotas.js?v=<?= filemtime(__DIR__ . '/../assets/js/mascotas.js') ?>" defer></script>
 </head>
 
-<body class="pagina-panel">
+<body class="pagina-panel" data-modulo="mascotas">
     <div class="estructura-panel">
 
         <!-- MENU LATERAL: se mantiene visible al desplazar la pagina en escritorio.
@@ -51,6 +115,10 @@
             <a href="../index.php" class="volver-inicio">
                 ← Volver al sitio
             </a>
+
+            <a href="../logout.php" class="volver-inicio">
+                Cerrar sesión
+            </a>
         </aside>
 
         <!-- Contenido principal. -->
@@ -61,12 +129,11 @@
             <h1>Mis mascotas</h1>
         </div>
 
-        <!-- Usuario de ejemplo. -->
         <div class="usuario-panel">
-            <span class="avatar" aria-hidden="true">L</span>
+            <span class="avatar" aria-hidden="true"><?= htmlspecialchars($inicialAvatar, ENT_QUOTES, 'UTF-8') ?></span>
 
             <div>
-                <strong>Laura Pérez</strong>
+                <strong><?= htmlspecialchars($nombreCliente, ENT_QUOTES, 'UTF-8') ?></strong>
                 <span>Cliente</span>
             </div>
         </div>
@@ -85,11 +152,14 @@
                 <option value="todas">Todas las especies</option>
                 <option value="perro">Perros</option>
                 <option value="gato">Gatos</option>
+                <option value="ave">Aves</option>
+                <option value="conejo">Conejos</option>
+                <option value="otro">Otras especies</option>
             </select>
         </div>
 
         <p id="resultado-filtro" role="status">
-            Mostrando 2 mascotas
+            <?= htmlspecialchars($textoContadorInicial, ENT_QUOTES, 'UTF-8') ?>
         </p>
     </div>
 
@@ -99,77 +169,60 @@
         </h2>
 
         <div class="rejilla-mascotas">
-            <!-- data-especie identifica la especie para el filtro. -->
-            <article class="tarjeta-mascota" data-especie="perro">
-                <div class="mascota-ilustracion" aria-hidden="true">
-                    🐶
-                </div>
+            <?php foreach ($mascotas as $mascota): ?>
+                <?php
+                $especieClave  = strtolower(trim((string) $mascota['especie']));
+                $especieNombre = $etiquetasEspecie[$especieClave] ?? ucfirst($especieClave);
+                $razaTexto     = trim((string) ($mascota['raza'] ?? '')) ?: 'No especificada';
+                $edadTexto     = formatearEdad((int) $mascota['edad_anios'], (int) $mascota['edad_meses']);
+                $esGato        = ($especieClave === 'gato');
+                $iconoMascota  = $esGato ? '🐱' : '🐶';
+                $claseIlust    = $esGato ? 'mascota-ilustracion mascota-ilustracion-gato' : 'mascota-ilustracion';
+                ?>
+                <!-- data-especie identifica la especie para el filtro. -->
+                <article class="tarjeta-mascota" data-especie="<?= htmlspecialchars($especieClave, ENT_QUOTES, 'UTF-8') ?>">
+                    <div class="<?= $claseIlust ?>" aria-hidden="true">
+                        <?= $iconoMascota ?>
+                    </div>
 
-                <div class="mascota-informacion">
-                    <h3>Max</h3>
+                    <div class="mascota-informacion">
+                        <h3><?= htmlspecialchars($mascota['nombre'], ENT_QUOTES, 'UTF-8') ?></h3>
 
-                    <dl class="datos-mascota">
-                        <div>
-                            <dt>Especie</dt>
-                            <dd>Perro</dd>
-                        </div>
-                        <div>
-                            <dt>Raza</dt>
-                            <dd>Golden Retriever</dd>
-                        </div>
+                        <dl class="datos-mascota">
+                            <div>
+                                <dt>Especie</dt>
+                                <dd><?= htmlspecialchars($especieNombre, ENT_QUOTES, 'UTF-8') ?></dd>
+                            </div>
+                            <div>
+                                <dt>Raza</dt>
+                                <dd><?= htmlspecialchars($razaTexto, ENT_QUOTES, 'UTF-8') ?></dd>
+                            </div>
 
-                        <div>
-                            <dt>Edad</dt>
-                            <dd>3 años</dd>
-                        </div>
+                            <div>
+                                <dt>Edad</dt>
+                                <dd><?= htmlspecialchars($edadTexto, ENT_QUOTES, 'UTF-8') ?></dd>
+                            </div>
 
-                        <div>
-                            <dt>Dueño</dt>
-                            <dd>Laura Pérez</dd>
-                        </div>
-                    </dl>
-                </div>
-            </article>
-
-            <article class="tarjeta-mascota" data-especie="gato">
-                <div
-                    class="mascota-ilustracion mascota-ilustracion-gato"
-                    aria-hidden="true"
-                >
-                    🐱
-                </div>
-
-                <div class="mascota-informacion">
-                    <h3>Luna</h3>
-
-                    <dl class="datos-mascota">
-                        <div>
-                            <dt>Especie</dt>
-                            <dd>Gato</dd>
-                        </div>
-                        <div>
-                            <dt>Raza</dt>
-                            <dd>Siamés</dd>
-                        </div>
-
-                        <div>
-                            <dt>Edad</dt>
-                            <dd>2 años</dd>
-                        </div>
-
-                        <div>
-                            <dt>Dueño</dt>
-                            <dd>Laura Pérez</dd>
-                        </div>
-                    </dl>
-                </div>
-            </article>
+                            <div>
+                                <dt>Dueño</dt>
+                                <dd><?= htmlspecialchars($nombreCliente, ENT_QUOTES, 'UTF-8') ?></dd>
+                            </div>
+                        </dl>
+                    </div>
+                </article>
+            <?php endforeach; ?>
         </div>
 
-        <!-- Aparece cuando el filtro no encuentra coincidencias. -->
-        <p id="listado-vacio" class="estado-vacio" hidden>
-            No hay mascotas para la especie seleccionada.
-        </p>
+        <!-- Aparece cuando no hay mascotas o el filtro no encuentra coincidencias. -->
+        <div id="listado-vacio" class="estado-vacio-ilustrado" <?= $totalMascotas > 0 ? 'hidden' : '' ?>>
+            <span class="estado-vacio-icono" aria-hidden="true">🐾</span>
+            <h3><?= $totalMascotas === 0 ? 'Aún no tienes mascotas registradas' : 'Sin coincidencias para esta especie' ?></h3>
+            <p>
+                <?= $totalMascotas === 0
+                    ? 'Cuando el personal veterinario registre a tus mascotas, podrás consultarlas aquí.'
+                    : 'No hay mascotas registradas que coincidan con la especie seleccionada.' ?>
+            </p>
+        </div>
     </section>
 
     <p class="aviso-demostracion">
@@ -178,6 +231,5 @@
 
         </main>
     </div>
-<!-- Conecta el filtro por especie; ../ sale de la carpeta cliente. -->
 </body>
 </html>

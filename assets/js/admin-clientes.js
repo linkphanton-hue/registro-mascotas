@@ -28,13 +28,11 @@ function filtrarClientes() {
     let cantidad = 0;
 
     filasClientes.forEach((fila) => {
-        const nombre = fila.querySelector(
-            ".cliente-nombre"
-        ).textContent;
+        const nombre =
+            fila.querySelector(".cliente-nombre")?.textContent ?? "";
 
-        const correo = fila.querySelector(
-            ".cliente-correo"
-        ).textContent;
+        const correo =
+            fila.querySelector(".cliente-correo")?.textContent ?? "";
 
         const textoCliente = normalizarTexto(
             `${nombre} ${correo}`
