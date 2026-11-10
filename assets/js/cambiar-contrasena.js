@@ -1,4 +1,3 @@
-/* CAMBIAR CONTRASEÑA: validación visual, sin consultas ni guardados. */
 const formularioCambio = document.getElementById("formulario-cambio-contrasena");
 
 if (formularioCambio) {
@@ -25,21 +24,22 @@ if (formularioCambio) {
     });
 
     formularioCambio.addEventListener("submit", (evento) => {
-        // Impide enviar datos: la comprobación real se implementará en PHP.
-        evento.preventDefault();
-        if (!formularioCambio.reportValidity()) return;
+        if (!formularioCambio.reportValidity()) {
+            evento.preventDefault();
+            return;
+        }
         if (nueva.value !== confirmar.value) {
+            evento.preventDefault();
             informarCambio("La nueva contraseña y su confirmación no coinciden.", "error");
             confirmar.focus();
             return;
         }
         if (nueva.value === actual.value) {
+            evento.preventDefault();
             informarCambio("La nueva contraseña debe ser diferente de la actual.", "error");
             nueva.focus();
             return;
         }
-        informarCambio("Campos válidos. Todavía no se verifica la contraseña actual ni se guardan cambios.", "informacion");
-        formularioCambio.reset();
-        [actual, nueva, confirmar].forEach((campo) => { campo.type = "password"; });
+        /* Si las validaciones en navegador pasan, se envía al servidor PHP. */
     });
 }

@@ -114,3 +114,110 @@ El plan detallado y la siguiente tarea se mantienen en `estado-proyecto.md`. El 
 
 ## 12. Documentación de entrega pendiente
 Completar portada e integrantes, diagrama y explicación ER, capturas finales, instrucciones de importación de SQL, pruebas de instalación desde cero y conclusiones. Convertir el contenido final a Word o PDF según lo solicitado en la guía del profesor.
+
+---
+
+## Actualización técnica del 9 de noviembre de 2026: Persistencia PDO, Seguridad, Borrado Lógico, Sesiones por Rol y Campo Raza
+
+En la jornada del 9 de noviembre de 2026 se completó la implementación del backend en PHP 8.2 y MySQL (InnoDB), conectando todas las vistas mediante PDO y consultas preparadas.
+
+### 13. Modelo de Base de Datos y Diagrama Entidad-Relación (`db/import.sql`)
+
+La base de datos `registro_mascotas` (`utf8mb4_unicode_ci`) está compuesta por tres tablas relacionales definidas en `db/import.sql`:
+
+```mermaid
+erDiagram
+    USUARIOS ||--o{ MASCOTAS : "es dueño de"
+    USUARIOS {
+        int id PK
+        varchar nombre
+        varchar correo UK
+        varchar contrasena
+        enum rol "admin, cliente"
+        enum estado "Activo, Inactivo"
+        timestamp creado_en
+    }
+    MASCOTAS {
+        int id PK
+        varchar nombre
+        varchar especie
+        varchar raza "VARCHAR(100) DEFAULT 'No especificada'"
+        tinyint edad_anios "0 a 100"
+        tinyint edad_meses "0 a 11"
+        int usuario_id FK
+        enum estado "Activo, Inactivo"
+        timestamp creado_en
+    }
+    MENSAJES_CONTACTO {
+        int id PK
+        varchar nombre
+        varchar correo
+        varchar asunto
+        text mensaje
+        timestamp creado_en
+    }
+```
+
+- **`usuarios`:** Almacena tanto administradores (`rol = 'admin'`) como clientes (`rol = 'cliente'`). El correo electrónico tiene índice `UNIQUE` y la contraseña se almacena cifrada con `password_hash(..., PASSWORD_DEFAULT)`.
+- **`mascotas`:** Se relaciona con `usuarios(id)` mediante la clave foránea `fk_mascotas_usuario` (`ON DELETE CASCADE ON UPDATE CASCADE`). Incluye `raza VARCHAR(100) NOT NULL DEFAULT 'No especificada'`, `edad_anios TINYINT UNSIGNED` y `edad_meses TINYINT UNSIGNED`.
+- **`mensajes_contacto`:** Registra las consultas enviadas desde el formulario público `contacto.php`.
+
+### 14. Persistencia con PDO y Aislamiento de Credenciales
+
+- **Aislamiento de credenciales (`includes/config.php` y `.gitignore`):**
+  - Las constantes `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` y `DB_CHARSET` residen en `includes/config.php` protegidas con guardias `defined(...) || define(...)`.
+  - El archivo `includes/config.php` está listado en `.gitignore` para evitar exponer credenciales en repositorios públicos.
+- **Conexión segura (`includes/conexion.php`):**
+  - Instancia `$pdo` con `PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION`, `PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC` y `PDO::ATTR_EMULATE_PREPARES => false` (consultas preparadas nativas en MySQL).
+  - En caso de fallo de conexión, captura `PDOException`, registra el detalle técnico con `error_log()` sin exponer trazas ni contraseñas en pantalla y define `$errorConexion` para que la interfaz muestre un aviso controlado.
+- **Consultas preparadas y relaciones SQL:**
+  - Todas las lecturas y escrituras con datos externos emplean `$pdo->prepare()` y marcadores con nombre (`:nombre`, `:especie`, `:raza`, `:edad_anios`, `:edad_meses`, `:usuario_id`, `:id`).
+  - `admin/mascotas.php` y `admin/panel.php` utilizan `INNER JOIN` entre `mascotas` y `usuarios` para obtener el nombre del dueño junto a los datos de cada mascota activa.
+  - `admin/clientes.php` emplea `LEFT JOIN` con `COUNT(mascotas.id)` y `GROUP BY` para calcular en una sola consulta cuántas mascotas activas tiene cada cliente.
+
+### 15. Borrado Lógico (Soft Delete) e Integridad de Operaciones
+
+- **Columna `estado`:** Tanto `usuarios` como `mascotas` cuentan con `estado ENUM('Activo', 'Inactivo') NOT NULL DEFAULT 'Activo'`.
+- **Baja sin pérdida de historial:** Al eliminar una mascota desde `admin/mascotas.php` (mediante petición `POST`), no se ejecuta `DELETE FROM`, sino:
+  ```sql
+  UPDATE mascotas SET estado = 'Inactivo' WHERE id = :id AND estado = 'Activo'
+  ```
+  Se comprueba `$stmtEliminar->rowCount() > 0` antes de confirmar la baja con `?eliminado=1`.
+- **Filtrado consistente y validación previa en edición:**
+  - Todos los listados (`admin/mascotas.php`, `admin/clientes.php`, `admin/panel.php`, `cliente/panel.php`, `cliente/mis-mascotas.php`) y el selector de clientes en `admin/formulario-mascota.php` filtran por `estado = 'Activo'`.
+  - Antes de procesar un `UPDATE` en `admin/formulario-mascota.php` o `admin/formulario-cliente.php`, el servidor verifica mediante una consulta previa que el ID recibido exista y tenga `estado = 'Activo'`, impidiendo ediciones sobre registros dados de baja o inexistentes.
+
+### 16. Autenticación y Sesiones Estrictas por Rol
+
+- **Inicio de sesión (`login.php`) y Registro (`registro.php`):**
+  - `login.php` consulta el usuario activo por correo, valida la clave con `password_verify()`, regenera el identificador de sesión con `session_regenerate_id(true)` para prevenir fijación de sesión y almacena `usuario_id`, `usuario_nombre`, `usuario_correo` y `usuario_rol` en `$_SESSION`.
+  - Redirige automáticamente a `admin/panel.php` si el rol es `admin`, o a `cliente/panel.php` si es `cliente`.
+- **Middleware de protección (`includes/sesion.php`):**
+  - La función `requerirRol($rolRequerido, $rutaLogin)` se invoca al inicio de todos los archivos de `admin/` y `cliente/`.
+  - Declara `global $pdo, $errorConexion;` antes de incluir `includes/conexion.php` (garantizando que `$pdo` permanezca disponible en el ámbito global de la página) y consulta en tiempo real en MySQL que el `$_SESSION['usuario_id']` exista, tenga `estado = 'Activo'` y posea exactamente el rol requerido.
+  - Si alguna comprobación falla, invoca `destruirSesionYRedirigir()`, que limpia `$_SESSION`, destruye la sesión y redirige a `login.php`.
+- **Seguridad en Perfil (`cliente/perfil.php`), Cambio de Contraseña (`cambiar-contrasena.php`) y Cierre (`logout.php`):**
+  - `cliente/perfil.php` y `cambiar-contrasena.php` operan exclusivamente sobre `$_SESSION['usuario_id']`, sin utilizar jamás un cliente por defecto.
+  - `logout.php` (y `cerrar-sesion.php`) vacía `$_SESSION`, expira la cookie de sesión en el navegador, ejecuta `session_destroy()` y redirige a `login.php`.
+
+### 17. Integración del Campo `raza` y Edad Detallada (`edad_anios` y `edad_meses`)
+
+- **Esquema y comando SQL para `raza`:**
+  - La tabla `mascotas` incorpora la columna `raza`:
+    ```sql
+    ALTER TABLE mascotas ADD COLUMN IF NOT EXISTS raza VARCHAR(100) NOT NULL DEFAULT 'No especificada' AFTER especie;
+    ```
+- **Captura y persistencia en `admin/formulario-mascota.php`:**
+  - Se añadió el campo de texto `<input type="text" id="raza" name="raza" maxlength="100" required>` dentro de su contenedor `.campo-admin` para que el administrador digite manualmente la raza al registrar o editar una mascota.
+  - El procesamiento `POST` en PHP sanea y valida `$_POST['raza']` (obligatorio, hasta 100 caracteres) y lo vincula mediante el parámetro preparado `:raza` tanto en `INSERT INTO mascotas` como en `UPDATE mascotas`.
+  - La edad se captura en dos campos numéricos (`edad_anios` de `0` a `100` y `edad_meses` de `0` a `11`) y se formatea de manera uniforme con `formatearEdad($anios, $meses)` desde `includes/formato.php`.
+- **Visualización dinámica en paneles:**
+  - `admin/mascotas.php` selecciona `mascotas.raza` en el `INNER JOIN` y la imprime en su propia columna `<td>` dentro de la tabla administrativa.
+  - `cliente/panel.php` y `cliente/mis-mascotas.php` consultan `raza` en la tabla `mascotas` e imprimen dinámicamente `<dt>Raza</dt><dd><?= htmlspecialchars($razaTexto, ENT_QUOTES, 'UTF-8') ?></dd>` en cada tarjeta.
+
+### 18. Estado de Pantallas y Cuentas de Prueba (9 de noviembre de 2026)
+
+- **Ejecución local:** Disponible tanto en Apache (`http://localhost/registro-mascotas/index.php`) como en el servidor interno de PHP (`http://localhost:8000/index.php`).
+- **Cuentas de prueba en `db/import.sql`:**
+  - **Administrador:** `admin@veterinaria.com` | Contraseña: `12345678`
+  - **Cliente:** `laura@example.com` | Contraseña: `12345678` (con las mascotas *Max* — Perro, Golden Retriever — y *Luna* — Gato, Siamés —).

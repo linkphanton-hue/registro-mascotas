@@ -6,10 +6,20 @@
 
     <title>Recuperar cuenta | Cuidado de tus Mascotas</title>
 
+    <script>
+        try {
+            if (localStorage.getItem('tema-preferido') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {}
+    </script>
+
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="assets/css/estilos.css?v=<?= filemtime(__DIR__ . '/assets/css/estilos.css') ?>">
+    <link rel="stylesheet" href="assets/css/tema.css?v=<?= filemtime(__DIR__ . '/assets/css/tema.css') ?>">
     <!-- defer espera a que el HTML exista antes de conectar filtros y validaciones. -->
+    <script src="assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/assets/js/interfaz.js') ?>" defer></script>
     <script src="assets/js/principal.js" defer></script>
 </head>
 <body class="pagina-login">

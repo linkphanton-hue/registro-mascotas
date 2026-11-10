@@ -1,3 +1,70 @@
+<?php
+require_once __DIR__ . '/includes/sesion.php';
+requerirRol(null, 'login.php');
+
+require_once __DIR__ . '/includes/conexion.php';
+
+$mensajeTexto = '';
+$mensajeTipo = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $actual    = (string) ($_POST['contrasena_actual'] ?? '');
+    $nueva     = (string) ($_POST['nueva_contrasena'] ?? '');
+    $confirmar = (string) ($_POST['confirmar_contrasena'] ?? '');
+
+    if (!$pdo) {
+        $mensajeTexto = $errorConexion ?? 'No se pudo conectar con la base de datos.';
+        $mensajeTipo = 'error';
+    } elseif ($actual === '' || $nueva === '' || $confirmar === '') {
+        $mensajeTexto = 'Completa todos los campos de contraseña.';
+        $mensajeTipo = 'error';
+    } elseif (mb_strlen($nueva) < 8) {
+        $mensajeTexto = 'La nueva contraseña debe tener al menos 8 caracteres.';
+        $mensajeTipo = 'error';
+    } elseif ($nueva !== $confirmar) {
+        $mensajeTexto = 'La nueva contraseña y su confirmación no coinciden.';
+        $mensajeTipo = 'error';
+    } elseif ($nueva === $actual) {
+        $mensajeTexto = 'La nueva contraseña debe ser diferente de la actual.';
+        $mensajeTipo = 'error';
+    } else {
+        try {
+            $stmtUsuario = $pdo->prepare(
+                "SELECT id, contrasena FROM usuarios WHERE id = :id AND estado = :estado LIMIT 1"
+            );
+            $stmtUsuario->execute([
+                ':id'     => (int) $_SESSION['usuario_id'],
+                ':estado' => 'Activo',
+            ]);
+
+            $usuario = $stmtUsuario->fetch();
+
+            if (!$usuario) {
+                destruirSesionYRedirigir('login.php');
+            } elseif (!password_verify($actual, $usuario['contrasena'])) {
+                $mensajeTexto = 'La contraseña actual ingresada es incorrecta.';
+                $mensajeTipo = 'error';
+            } else {
+                $nuevoHash = password_hash($nueva, PASSWORD_DEFAULT);
+                $stmtActualizar = $pdo->prepare(
+                    "UPDATE usuarios SET contrasena = :contrasena WHERE id = :id"
+                );
+                $stmtActualizar->execute([
+                    ':contrasena' => $nuevoHash,
+                    ':id'         => (int) $usuario['id'],
+                ]);
+
+                $mensajeTexto = 'Contraseña actualizada correctamente en la base de datos.';
+                $mensajeTipo = 'informacion';
+            }
+        } catch (PDOException $e) {
+            error_log('Error al actualizar contraseña en cambiar-contrasena.php: ' . $e->getMessage());
+            $mensajeTexto = 'Ocurrió un error interno al actualizar la contraseña.';
+            $mensajeTipo = 'error';
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,13 +73,23 @@
 
     <title>Cambiar contraseña | Cuidado de tus Mascotas</title>
 
+    <script>
+        try {
+            if (localStorage.getItem('tema-preferido') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {}
+    </script>
+
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="assets/css/estilos.css?v=<?= filemtime(__DIR__ . '/assets/css/estilos.css') ?>">
     <link rel="stylesheet" href="assets/css/cambiar-contrasena.css?v=<?= filemtime(__DIR__ . '/assets/css/cambiar-contrasena.css') ?>">
+    <link rel="stylesheet" href="assets/css/tema.css?v=<?= filemtime(__DIR__ . '/assets/css/tema.css') ?>">
     <!-- defer espera a que el HTML exista antes de conectar filtros y validaciones. -->
+    <script src="assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/assets/js/interfaz.js') ?>" defer></script>
     <script src="assets/js/principal.js" defer></script>
-    <script src="assets/js/cambiar-contrasena.js" defer></script>
+    <script src="assets/js/cambiar-contrasena.js?v=<?= filemtime(__DIR__ . '/assets/js/cambiar-contrasena.js') ?>" defer></script>
 </head>
 <body class="pagina-login">
 
@@ -114,11 +191,7 @@
         <p>Actualiza la contraseña de tu cuenta</p>
     </header>
 
-    <!--
-        Formulario para un usuario que accede desde Mi perfil.
-        La contraseña actual se verificará en PHP al conectar MySQL.
-    -->
-    <form id="formulario-cambio-contrasena" method="post">
+    <form id="formulario-cambio-contrasena" method="post" action="cambiar-contrasena.php">
         <div class="campo">
             <label for="contrasena-actual">Contraseña actual</label>
 
@@ -172,7 +245,11 @@
             Mostrar contraseñas
         </label>
 
-        <p id="mensaje-contrasena" class="mensaje-formulario" role="status"></p>
+        <p
+            id="mensaje-contrasena"
+            class="mensaje-formulario<?= $mensajeTipo !== '' ? ' ' . htmlspecialchars($mensajeTipo, ENT_QUOTES, 'UTF-8') : '' ?>"
+            role="status"
+        ><?= htmlspecialchars($mensajeTexto, ENT_QUOTES, 'UTF-8') ?></p>
 
         <button type="submit" class="boton-login">
             Guardar contraseña

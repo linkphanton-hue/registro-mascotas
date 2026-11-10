@@ -1,0 +1,4 @@
+# Archivos de configuración con credenciales sensibles
+includes/config.php
+.env
+

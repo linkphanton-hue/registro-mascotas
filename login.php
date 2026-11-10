@@ -1,3 +1,60 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/includes/conexion.php';
+
+$mensajeTexto = '';
+$mensajeTipo = '';
+$correoIngresado = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $correoIngresado = trim((string) ($_POST['correo'] ?? ''));
+    $contrasena      = (string) ($_POST['contrasena'] ?? '');
+
+    if (!$pdo) {
+        $mensajeTexto = $errorConexion ?? 'No se pudo conectar con la base de datos.';
+        $mensajeTipo = 'error';
+    } elseif ($correoIngresado === '' || $contrasena === '') {
+        $mensajeTexto = 'Ingresa tu correo electrónico y tu contraseña.';
+        $mensajeTipo = 'error';
+    } else {
+        try {
+            $stmt = $pdo->prepare(
+                "SELECT id, nombre, correo, contrasena, rol FROM usuarios WHERE correo = :correo AND estado = :estado LIMIT 1"
+            );
+            $stmt->execute([
+                ':correo' => $correoIngresado,
+                ':estado' => 'Activo',
+            ]);
+            $usuario = $stmt->fetch();
+
+            if ($usuario && password_verify($contrasena, $usuario['contrasena'])) {
+                session_regenerate_id(true);
+                $_SESSION['usuario_id']     = (int) $usuario['id'];
+                $_SESSION['usuario_nombre'] = $usuario['nombre'];
+                $_SESSION['usuario_correo'] = $usuario['correo'];
+                $_SESSION['usuario_rol']    = $usuario['rol'];
+
+                if ($usuario['rol'] === 'admin') {
+                    header('Location: admin/panel.php');
+                } else {
+                    header('Location: cliente/panel.php');
+                }
+                exit;
+            } else {
+                $mensajeTexto = 'Correo o contraseña incorrectos, o cuenta inactiva.';
+                $mensajeTipo = 'error';
+            }
+        } catch (PDOException $e) {
+            error_log('Error al iniciar sesión en login.php: ' . $e->getMessage());
+            $mensajeTexto = 'Ocurrió un error al verificar tus credenciales.';
+            $mensajeTipo = 'error';
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,13 +63,26 @@
 
     <title>Iniciar sesión | Cuidado de tus Mascotas</title>
 
+    <script>
+        try {
+            if (localStorage.getItem('tema-preferido') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {}
+    </script>
+
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="assets/css/estilos.css?v=<?= filemtime(__DIR__ . '/assets/css/estilos.css') ?>">
+    <link rel="stylesheet" href="assets/css/tema.css?v=<?= filemtime(__DIR__ . '/assets/css/tema.css') ?>">
     <!-- defer espera a que el HTML exista antes de conectar filtros y validaciones. -->
+    <script src="assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/assets/js/interfaz.js') ?>" defer></script>
     <script src="assets/js/principal.js" defer></script>
 </head>
-<body class="pagina-login">
+<body
+    class="pagina-login"
+    <?= $mensajeTexto !== '' ? 'data-toast-mensaje="' . htmlspecialchars($mensajeTexto, ENT_QUOTES, 'UTF-8') . '" data-toast-tipo="' . htmlspecialchars($mensajeTipo, ENT_QUOTES, 'UTF-8') . '"' : '' ?>
+>
 
 <!-- Fondo decorativo con ondas. -->
 <div class="fondo-ondas" aria-hidden="true">
@@ -113,7 +183,7 @@
             <p>Ingresa tus datos para continuar</p>
         </header>
 
-        <form id="formulario-login">
+        <form id="formulario-login" method="post" action="login.php">
             <div class="campo">
                 <label for="correo">Correo electrónico</label>
 
@@ -123,6 +193,7 @@
                     name="correo"
                     placeholder="tu@correo.com"
                     autocomplete="username"
+                    value="<?= htmlspecialchars($correoIngresado, ENT_QUOTES, 'UTF-8') ?>"
                     required
                 >
             </div>
@@ -140,7 +211,7 @@
                 >
             </div>
 
-            <button type="button" class="boton-login">
+            <button type="submit" class="boton-login">
                 Iniciar sesión
             </button>
         </form>

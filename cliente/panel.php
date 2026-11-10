@@ -1,3 +1,62 @@
+<?php
+require_once __DIR__ . '/../includes/sesion.php';
+requerirRol('cliente', '../login.php');
+
+require_once __DIR__ . '/../includes/conexion.php';
+require_once __DIR__ . '/../includes/formato.php';
+
+$clienteId     = (int) $_SESSION['usuario_id'];
+$nombreCliente = trim((string) $_SESSION['usuario_nombre']);
+$inicialAvatar = mb_strtoupper(mb_substr($nombreCliente, 0, 1));
+$partesNombre  = preg_split('/\s+/', $nombreCliente);
+$primerNombre  = $partesNombre[0] ?: $nombreCliente;
+$mascotas      = [];
+
+$etiquetasEspecie = [
+    'perro'  => 'Perro',
+    'gato'   => 'Gato',
+    'ave'    => 'Ave',
+    'conejo' => 'Conejo',
+    'otro'   => 'Otra especie',
+];
+
+if ($pdo) {
+    try {
+        $stmtCliente = $pdo->prepare(
+            "SELECT id, nombre FROM usuarios WHERE id = :id AND rol = :rol AND estado = :estado LIMIT 1"
+        );
+        $stmtCliente->execute([
+            ':id'     => $clienteId,
+            ':rol'    => 'cliente',
+            ':estado' => 'Activo',
+        ]);
+        $clienteActual = $stmtCliente->fetch();
+
+        if (!$clienteActual) {
+            destruirSesionYRedirigir('../login.php');
+        }
+
+        $clienteId     = (int) $clienteActual['id'];
+        $nombreCliente = trim((string) $clienteActual['nombre']);
+        $inicialAvatar = mb_strtoupper(mb_substr($nombreCliente, 0, 1));
+        $partesNombre  = preg_split('/\s+/', $nombreCliente);
+        $primerNombre  = $partesNombre[0] ?: $nombreCliente;
+
+        $stmtMascotas = $pdo->prepare(
+            "SELECT id, nombre, especie, raza, edad_anios, edad_meses FROM mascotas WHERE usuario_id = :usuario_id AND estado = :estado ORDER BY id ASC"
+        );
+        $stmtMascotas->execute([
+            ':usuario_id' => $clienteId,
+            ':estado'     => 'Activo',
+        ]);
+        $mascotas = $stmtMascotas->fetchAll();
+    } catch (PDOException $e) {
+        error_log('Error al cargar panel del cliente en cliente/panel.php: ' . $e->getMessage());
+    }
+}
+
+$totalMascotas = count($mascotas);
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,15 +65,23 @@
 
     <title>Mi panel | Cuidado de tus Mascotas</title>
 
-    <!-- Version automatica del CSS para cargar los estilos al guardar cambios. -->
+    <script>
+        try {
+            if (localStorage.getItem('tema-preferido') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {}
+    </script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="../assets/css/panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/panel.css') ?>">
     <link rel="stylesheet" href="../assets/css/cliente-mascotas.css?v=<?= filemtime(__DIR__ . '/../assets/css/cliente-mascotas.css') ?>">
+    <link rel="stylesheet" href="../assets/css/tema.css?v=<?= filemtime(__DIR__ . '/../assets/css/tema.css') ?>">
+    <script src="../assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/../assets/js/interfaz.js') ?>" defer></script>
 </head>
 
-<body class="pagina-panel">
+<body class="pagina-panel" data-modulo="panel">
     <div class="estructura-panel">
 
         <!-- MENU LATERAL: se mantiene visible al desplazar la pagina en escritorio.
@@ -49,6 +116,10 @@
             <a href="../index.php" class="volver-inicio">
                 ← Volver al sitio
             </a>
+
+            <a href="../logout.php" class="volver-inicio">
+                Cerrar sesión
+            </a>
         </aside>
 
         <!-- Contenido principal. -->
@@ -59,12 +130,11 @@
                     <h1>Mi espacio</h1>
                 </div>
 
-                <!-- Nombre de ejemplo: todavía no viene de una sesión. -->
                 <div class="usuario-panel">
-                    <span class="avatar" aria-hidden="true">L</span>
+                    <span class="avatar" aria-hidden="true"><?= htmlspecialchars($inicialAvatar, ENT_QUOTES, 'UTF-8') ?></span>
 
                     <div>
-                        <strong>Laura Pérez</strong>
+                        <strong><?= htmlspecialchars($nombreCliente, ENT_QUOTES, 'UTF-8') ?></strong>
                         <span>Cliente</span>
                     </div>
                 </div>
@@ -73,7 +143,7 @@
             <!-- Presentación del panel. -->
             <section class="bienvenida" aria-labelledby="titulo-bienvenida">
                 <div>
-                    <h2 id="titulo-bienvenida">¡Hola, Laura!</h2>
+                    <h2 id="titulo-bienvenida">¡Hola, <?= htmlspecialchars($primerNombre, ENT_QUOTES, 'UTF-8') ?>!</h2>
                     <p>
                         Aquí encontrarás la información de tus
                         compañeros de cuatro patas.
@@ -87,14 +157,14 @@
                 <span class="bienvenida-huella" aria-hidden="true">🐾</span>
             </section>
 
-            <!-- Resumen con datos de demostración. -->
+            <!-- Resumen conectado a la base de datos. -->
             <section class="resumen-panel" aria-label="Resumen de mi cuenta">
                 <article class="tarjeta-resumen">
                     <span aria-hidden="true">🐶</span>
 
                     <div>
                         <p>Mascotas registradas</p>
-                        <strong>2</strong>
+                        <strong><?= $totalMascotas ?></strong>
                     </div>
                 </article>
 
@@ -115,65 +185,52 @@
                     <a href="mis-mascotas.php">Ver todas →</a>
                 </div>
 
-                <div class="rejilla-mascotas">
-
-                    <!-- Mascota de ejemplo 1. -->
-                    <article class="tarjeta-mascota">
-                        <div class="mascota-ilustracion" aria-hidden="true">
-                            🐶
-                        </div>
-
-                        <div class="mascota-informacion">
-                            <h3>Max</h3>
-
-                            <dl class="datos-mascota">
-                                <div>
-                                    <dt>Especie</dt>
-                                    <dd>Perro</dd>
-                                </div>
-                                <div>
-                                    <dt>Raza</dt>
-                                    <dd>Golden Retriever</dd>
-                                </div>
-
-                                <div>
-                                    <dt>Edad</dt>
-                                    <dd>3 años</dd>
-                                </div>
-                            </dl>
-                        </div>
-                    </article>
-
-                    <!-- Mascota de ejemplo 2. -->
-                    <article class="tarjeta-mascota">
-                        <div
-                            class="mascota-ilustracion mascota-ilustracion-gato"
-                            aria-hidden="true"
-                        >
-                            🐱
-                        </div>
-
-                        <div class="mascota-informacion">
-                            <h3>Luna</h3>
-
-                            <dl class="datos-mascota">
-                                <div>
-                                    <dt>Especie</dt>
-                                    <dd>Gato</dd>
-                                </div>
-                                <div>
-                                    <dt>Raza</dt>
-                                    <dd>Siamés</dd>
+                <?php if ($totalMascotas === 0): ?>
+                    <div class="estado-vacio-ilustrado">
+                        <span class="estado-vacio-icono" aria-hidden="true">🐾</span>
+                        <h3>Aún no tienes mascotas registradas</h3>
+                        <p>Cuando la veterinaria asocie tus mascotas a tu cuenta, aparecerán aquí.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="rejilla-mascotas">
+                        <?php foreach ($mascotas as $mascota): ?>
+                            <?php
+                            $especieClave  = strtolower(trim((string) $mascota['especie']));
+                            $especieNombre = $etiquetasEspecie[$especieClave] ?? ucfirst($especieClave);
+                            $razaTexto     = trim((string) ($mascota['raza'] ?? '')) ?: 'No especificada';
+                            $edadTexto     = formatearEdad((int) $mascota['edad_anios'], (int) $mascota['edad_meses']);
+                            $esGato        = ($especieClave === 'gato');
+                            $iconoMascota  = $esGato ? '🐱' : '🐶';
+                            $claseIlust    = $esGato ? 'mascota-ilustracion mascota-ilustracion-gato' : 'mascota-ilustracion';
+                            ?>
+                            <article class="tarjeta-mascota">
+                                <div class="<?= $claseIlust ?>" aria-hidden="true">
+                                    <?= $iconoMascota ?>
                                 </div>
 
-                                <div>
-                                    <dt>Edad</dt>
-                                    <dd>2 años</dd>
+                                <div class="mascota-informacion">
+                                    <h3><?= htmlspecialchars($mascota['nombre'], ENT_QUOTES, 'UTF-8') ?></h3>
+
+                                    <dl class="datos-mascota">
+                                        <div>
+                                            <dt>Especie</dt>
+                                            <dd><?= htmlspecialchars($especieNombre, ENT_QUOTES, 'UTF-8') ?></dd>
+                                        </div>
+                                        <div>
+                                            <dt>Raza</dt>
+                                            <dd><?= htmlspecialchars($razaTexto, ENT_QUOTES, 'UTF-8') ?></dd>
+                                        </div>
+
+                                        <div>
+                                            <dt>Edad</dt>
+                                            <dd><?= htmlspecialchars($edadTexto, ENT_QUOTES, 'UTF-8') ?></dd>
+                                        </div>
+                                    </dl>
                                 </div>
-                            </dl>
-                        </div>
-                    </article>
-                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </section>
 
             <p class="aviso-demostracion">Vista de práctica con datos de ejemplo.</p>

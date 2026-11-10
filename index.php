@@ -6,9 +6,19 @@
 
     <title>Inicio | Cuidado de tus Mascotas</title>
 
+    <script>
+        try {
+            if (localStorage.getItem('tema-preferido') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {}
+    </script>
+
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="assets/css/inicio.css?v=<?= filemtime(__DIR__ . '/assets/css/inicio.css') ?>">
+    <link rel="stylesheet" href="assets/css/tema.css?v=<?= filemtime(__DIR__ . '/assets/css/tema.css') ?>">
+    <script src="assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/assets/js/interfaz.js') ?>" defer></script>
 </head>
 
 <body>
@@ -26,7 +36,7 @@
             <div class="menu">
                 <a href="#servicios">Servicios</a>
                 <a href="#nosotros">Nosotros</a>
-                <a href="#contacto">Contacto</a>
+                <a href="contacto.php">Contacto</a>
                 <a href="login.php" class="boton boton-pequeno">
                     Iniciar sesión
                 </a>
@@ -198,6 +208,7 @@
             </div>
 
             <nav aria-label="Enlaces del pie">
+                <a href="contacto.php">Contacto</a>
                 <a href="login.php">Iniciar sesión</a>
                 <a href="registro.php">Registrarse</a>
                 <a href="recuperar-contrasena.php">

@@ -1,3 +1,69 @@
+<?php
+require_once __DIR__ . '/../includes/sesion.php';
+requerirRol('admin', '../login.php');
+
+require_once __DIR__ . '/../includes/conexion.php';
+require_once __DIR__ . '/../includes/formato.php';
+
+$totalMascotas = 0;
+$totalClientes = 0;
+$totalEspecies = 0;
+$mascotasRecientes = [];
+
+$etiquetasEspecie = [
+    'perro'  => 'Perro',
+    'gato'   => 'Gato',
+    'ave'    => 'Ave',
+    'conejo' => 'Conejo',
+    'otro'   => 'Otra especie',
+];
+
+if ($pdo) {
+    try {
+        $stmtMetricas = $pdo->prepare(
+            "SELECT
+                (SELECT COUNT(*) FROM mascotas WHERE estado = :est_m1) AS total_mascotas,
+                (SELECT COUNT(*) FROM usuarios WHERE rol = :rol_c AND estado = :est_u1) AS total_clientes,
+                (SELECT COUNT(DISTINCT especie) FROM mascotas WHERE estado = :est_m2) AS total_especies"
+        );
+        $stmtMetricas->execute([
+            ':est_m1' => 'Activo',
+            ':rol_c'  => 'cliente',
+            ':est_u1' => 'Activo',
+            ':est_m2' => 'Activo',
+        ]);
+        $metricas = $stmtMetricas->fetch();
+
+        if ($metricas) {
+            $totalMascotas = (int) $metricas['total_mascotas'];
+            $totalClientes = (int) $metricas['total_clientes'];
+            $totalEspecies = (int) $metricas['total_especies'];
+        }
+
+        $stmtRecientes = $pdo->prepare(
+            "SELECT
+                mascotas.nombre,
+                mascotas.especie,
+                mascotas.edad_anios,
+                mascotas.edad_meses,
+                usuarios.nombre AS dueno_nombre
+            FROM mascotas
+            INNER JOIN usuarios ON mascotas.usuario_id = usuarios.id
+            WHERE mascotas.estado = :estado_mascota
+              AND usuarios.estado = :estado_usuario
+            ORDER BY mascotas.id DESC
+            LIMIT 10"
+        );
+        $stmtRecientes->execute([
+            ':estado_mascota' => 'Activo',
+            ':estado_usuario' => 'Activo',
+        ]);
+        $mascotasRecientes = $stmtRecientes->fetchAll();
+    } catch (PDOException $e) {
+        error_log('Error al consultar resumen en admin/panel.php: ' . $e->getMessage());
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,18 +72,24 @@
 
     <title>Panel de administración | Cuidado de tus Mascotas</title>
 
-    <!-- Reutiliza el diseño general de los paneles. -->
-
-    <!-- Estilos específicos del administrador. -->
+    <script>
+        try {
+            if (localStorage.getItem('tema-preferido') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {}
+    </script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="../assets/css/panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/panel.css') ?>">
     <link rel="stylesheet" href="../assets/css/admin.css?v=<?= filemtime(__DIR__ . '/../assets/css/admin.css') ?>">
     <link rel="stylesheet" href="../assets/css/admin-panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/admin-panel.css') ?>">
+    <link rel="stylesheet" href="../assets/css/tema.css?v=<?= filemtime(__DIR__ . '/../assets/css/tema.css') ?>">
+    <script src="../assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/../assets/js/interfaz.js') ?>" defer></script>
 </head>
 
-<body class="pagina-panel">
+<body class="pagina-panel" data-modulo="panel">
     <div class="estructura-panel">
 
         <!--
@@ -53,6 +125,10 @@
             <a href="../index.php" class="volver-inicio">
                 ← Volver al sitio
             </a>
+
+            <a href="../logout.php" class="volver-inicio">
+                Cerrar sesión
+            </a>
         </aside>
 
         <main class="contenido-panel">
@@ -62,12 +138,11 @@
                     <h1>Panel principal</h1>
                 </div>
 
-                <!-- Identidad de ejemplo; todavía no existe autenticación. -->
                 <div class="usuario-panel">
                     <span class="avatar" aria-hidden="true">A</span>
 
                     <div>
-                        <strong>Administrador</strong>
+                        <strong><?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Administrador', ENT_QUOTES, 'UTF-8') ?></strong>
                         <span>Personal de la veterinaria</span>
                     </div>
                 </div>
@@ -94,14 +169,14 @@
                 </span>
             </section>
 
-            <!-- Resumen de demostración, coherente con la tabla inferior. -->
+            <!-- Resumen dinámico conectado a la base de datos. -->
             <section class="resumen-panel resumen-admin" aria-label="Resumen">
                 <article class="tarjeta-resumen">
                     <span aria-hidden="true">🐾</span>
 
                     <div>
                         <p>Mascotas registradas</p>
-                        <strong>2</strong>
+                        <strong><?= $totalMascotas ?></strong>
                     </div>
                 </article>
 
@@ -110,7 +185,7 @@
 
                     <div>
                         <p>Clientes registrados</p>
-                        <strong>1</strong>
+                        <strong><?= $totalClientes ?></strong>
                     </div>
                 </article>
 
@@ -119,7 +194,7 @@
 
                     <div>
                         <p>Especies registradas</p>
-                        <strong>2</strong>
+                        <strong><?= $totalEspecies ?></strong>
                     </div>
                 </article>
             </section>
@@ -152,10 +227,6 @@
                     <a href="mascotas.php">Ver listado completo →</a>
                 </div>
 
-                <!--
-                    El contenedor permite desplazar la tabla horizontalmente
-                    en pantallas pequeñas sin desbordar toda la página.
-                -->
                 <div
                     class="tabla-contenedor"
                     role="region"
@@ -177,19 +248,31 @@
                         </thead>
 
                         <tbody>
-                            <tr>
-                                <th scope="row">Max</th>
-                                <td>Perro</td>
-                                <td>3 años</td>
-                                <td>Laura Pérez</td>
-                            </tr>
+                            <?php foreach ($mascotasRecientes as $mascota): ?>
+                                <?php
+                                $especieClave = strtolower(trim((string) $mascota['especie']));
+                                $especieNombre = $etiquetasEspecie[$especieClave] ?? ucfirst($especieClave);
+                                $edadTexto = formatearEdad((int) $mascota['edad_anios'], (int) $mascota['edad_meses']);
+                                ?>
+                                <tr>
+                                    <th scope="row"><?= htmlspecialchars($mascota['nombre'], ENT_QUOTES, 'UTF-8') ?></th>
+                                    <td><?= htmlspecialchars($especieNombre, ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= htmlspecialchars($edadTexto, ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= htmlspecialchars($mascota['dueno_nombre'], ENT_QUOTES, 'UTF-8') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
 
-                            <tr>
-                                <th scope="row">Luna</th>
-                                <td>Gato</td>
-                                <td>2 años</td>
-                                <td>Laura Pérez</td>
-                            </tr>
+                            <?php if (empty($mascotasRecientes)): ?>
+                                <tr>
+                                    <td colspan="4">
+                                        <div class="estado-vacio-ilustrado">
+                                            <span class="estado-vacio-icono" aria-hidden="true">🐾</span>
+                                            <h3>Aún no hay mascotas registradas</h3>
+                                            <p>Registra la primera mascota desde el botón superior para verla aquí.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
