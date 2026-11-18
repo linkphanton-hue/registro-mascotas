@@ -108,3 +108,17 @@ Las tarjetas informativas e interactivas (`.tarjeta-resumen`, `.acceso-rapido`, 
   - En lugar de utilizar `confirm()` o `alert()` nativos, el primer clic sobre el botón de eliminar añade la clase `.confirmando-baja`, muestra el texto `"¿Confirmar?"` y lanza un Toast preventivo; el segundo clic dentro de los 3.5 segundos envía el formulario `POST` de baja lógica.
 - **Estados vacíos ilustrados (`.estado-vacio-ilustrado`):**
   - Cuando una tabla o listado carece de registros o coincidencias de filtro, se presenta un contenedor centrado con borde discontinuo, icono SVG en `.icono-vacio`, título `.titulo-vacio` y descripción `.texto-vacio`.
+
+---
+
+## Actualización del 17 de noviembre de 2026: Módulo administrativo de Mensajes
+
+Se añadió la hoja exclusiva `assets/css/admin-mensajes.css`, el script `assets/js/admin-mensajes.js` y la variante cromática `data-modulo="mensajes"` en `assets/css/tema.css` para integrar la bandeja de contacto en el panel de administración:
+
+| Archivo / Regla | Propósito |
+|---|---|
+| `assets/css/admin-mensajes.css` | Buscador `#buscar-mensaje`, columna resumida `.mensaje-asunto-celda`, botones `.accion-ver-mensaje` y `.accion-responder`, ventana modal temática (`.modal-overlay`, `.modal-caja`, `.modal-metadatos`, `.modal-bloque-mensaje`) que hereda variables de `tema.css` para claro/oscuro y estado vacío `#mensajes-vacio`. |
+| `body[data-modulo="mensajes"]` en `tema.css` | Acento azul cobalto (`#2563eb` claro / `#60a5fa` oscuro), superficie suave (`#eff6ff` / `rgba(96, 165, 250, 0.16)`) y variante oscura de `.accion-responder`. |
+| `.accesos-admin` en `admin-panel.css` | Ajustado de 2 a 3 columnas en escritorio (`repeat(3, minmax(0, 1fr))`) con salto a 1 columna por debajo de `1000px` para acomodar la tarjeta de acceso a Mensajes. |
+| `assets/js/admin-mensajes.js` | Filtro instantáneo en cliente por remitente, correo, asunto y `data-mensaje` usando normalización Unicode `NFD`, más apertura/cierre de modal mediante delegación de eventos y `dataset`. |
+

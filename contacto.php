@@ -1,4 +1,13 @@
 <?php
+/**
+ * Controlador y vista del formulario público de contacto.
+ *
+ * Recibe las consultas de los visitantes por método POST, valida el formato
+ * y longitud de cada campo y almacena el mensaje en la tabla mensajes_contacto.
+ *
+ * @package RegistroMascotas
+ */
+
 require_once __DIR__ . '/includes/conexion.php';
 
 $mensajeTexto = '';
@@ -11,6 +20,7 @@ $valores = [
     'mensaje' => '',
 ];
 
+/* Valida en servidor que nombre, correo, asunto y mensaje cumplan las reglas de longitud y formato */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre  = trim((string) ($_POST['nombre'] ?? ''));
     $correo  = trim((string) ($_POST['correo'] ?? ''));
@@ -43,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensajeTipo = 'error';
     } else {
         try {
+            /* Inserta el mensaje mediante consulta preparada (INSERT) y limpia los campos tras el éxito */
             $stmt = $pdo->prepare(
                 "INSERT INTO mensajes_contacto (nombre, correo, asunto, mensaje) VALUES (:nombre, :correo, :asunto, :mensaje)"
             );

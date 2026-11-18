@@ -1,0 +1,294 @@
+/* ============================================================
+   admin-mensajes.css
+   Exclusivo de admin/mensajes.php.
+   ============================================================ */
+
+/* ============================================================
+   MENSAJES ADMINISTRADOR - buscador, acciones y modal temático
+   ============================================================ */
+
+body.modal-abierto {
+    overflow: hidden;
+}
+
+.grupo-filtro input[type="search"] {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 14px;
+
+    font: inherit;
+    font-size: 14px;
+    color: #17234c;
+
+    background: #f8f9fe;
+    border: 1px solid #d9dcef;
+    border-radius: 10px;
+}
+
+.grupo-filtro input[type="search"]:focus-visible {
+    outline: 3px solid #bfdbfe;
+    outline-offset: 2px;
+    border-color: #2563eb;
+}
+
+#resultado-mensajes {
+    margin: 0;
+    color: #737d98;
+    font-size: 13px;
+}
+
+.mensaje-asunto-celda {
+    max-width: 300px;
+    color: var(--color-texto);
+    font-weight: 600;
+}
+
+.mensaje-fecha {
+    white-space: nowrap;
+}
+
+.accion-ver-mensaje {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    color: var(--color-texto);
+    background-color: var(--color-superficie-alt);
+    border-color: var(--color-borde-campo);
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.accion-ver-mensaje:hover {
+    color: var(--acento-modulo);
+    background-color: var(--acento-modulo-suave);
+    border-color: var(--acento-modulo-borde);
+    transform: translateY(-1px);
+}
+
+.accion-responder {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+
+    color: #1d4ed8;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.accion-responder:hover {
+    background: #dbeafe;
+    transform: translateY(-1px);
+}
+
+#mensajes-vacio td {
+    padding-block: 35px;
+    text-align: center;
+}
+
+/* ============================================================
+   VENTANA MODAL - lectura detallada con soporte claro/oscuro
+   ============================================================ */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+
+    display: grid;
+    place-items: center;
+    padding: 20px;
+
+    background: rgba(15, 23, 42, 0.56);
+    backdrop-filter: blur(4px);
+}
+
+.modal-overlay[hidden] {
+    display: none;
+}
+
+html[data-theme="dark"] .modal-overlay {
+    background: rgba(8, 8, 20, 0.74);
+}
+
+.modal-caja {
+    width: 100%;
+    max-width: 620px;
+    max-height: calc(100dvh - 40px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    color: var(--color-texto);
+    background-color: var(--color-superficie);
+    border: 1px solid var(--color-borde);
+    border-top: 4px solid var(--acento-modulo);
+    border-radius: 20px;
+    box-shadow: 0 24px 50px var(--color-sombra-elevada);
+
+    animation: modalEntrar 0.22s ease;
+}
+
+@keyframes modalEntrar {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-borde);
+}
+
+.modal-cabecera h2 {
+    margin: 0;
+    color: var(--color-texto);
+    font-size: 20px;
+}
+
+.modal-boton-cerrar {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-texto-secundario);
+    background-color: var(--color-superficie-alt);
+    border: 1px solid var(--color-borde-campo);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.modal-boton-cerrar:hover {
+    color: var(--acento-modulo);
+    background-color: var(--acento-modulo-suave);
+    border-color: var(--acento-modulo-borde);
+}
+
+.modal-cuerpo {
+    padding: 22px 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-metadatos {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.modal-dato {
+    padding: 12px 14px;
+    background-color: var(--color-superficie-alt);
+    border: 1px solid var(--color-borde);
+    border-radius: 12px;
+}
+
+.modal-dato-completo {
+    grid-column: 1 / -1;
+}
+
+.modal-dato dt,
+.modal-etiqueta-mensaje {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--color-texto-tenue);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+.modal-dato dd {
+    margin: 0;
+    color: var(--color-texto);
+    font-size: 14px;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.modal-bloque-mensaje {
+    padding: 16px 18px;
+    min-height: 120px;
+    background-color: var(--color-superficie-alt);
+    border: 1px solid var(--color-borde);
+    border-radius: 14px;
+}
+
+.modal-mensaje-texto {
+    margin: 6px 0 0;
+    color: var(--color-texto);
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.modal-pie {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 24px;
+    background-color: var(--color-fondo-suave);
+    border-top: 1px solid var(--color-borde);
+}
+
+.modal-boton-secundario {
+    padding: 9px 16px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-texto-secundario);
+    background-color: var(--color-superficie);
+    border: 1px solid var(--color-borde-campo);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.modal-boton-secundario:hover {
+    color: var(--color-texto);
+    background-color: var(--color-superficie-alt);
+}
+
+@media (max-width: 600px) {
+    .modal-metadatos {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .accion-ver-mensaje,
+    .accion-responder,
+    .modal-caja {
+        transition: none;
+        animation: none;
+    }
+
+    .accion-ver-mensaje:hover,
+    .accion-responder:hover {
+        transform: none;
+    }
+}

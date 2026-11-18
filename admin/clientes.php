@@ -1,4 +1,14 @@
 <?php
+/**
+ * Controlador del listado administrativo de clientes.
+ *
+ * Consulta todos los usuarios activos con rol 'cliente' y calcula cuántas
+ * mascotas activas tiene registrado cada dueño para mostrarlo en la tabla.
+ *
+ * @package RegistroMascotas\Admin
+ */
+
+/* Exige sesión activa con rol 'admin'; redirige a login.php si no cumple */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('admin', '../login.php');
 
@@ -11,6 +21,11 @@ if (!$pdo) {
     $errorListado = $errorConexion ?? 'No se pudo conectar con la base de datos para consultar los clientes.';
 } else {
     try {
+        /*
+         * Consulta preparada con LEFT JOIN y GROUP BY:
+         * Se utiliza LEFT JOIN (con la condición mascotas.estado = 'Activo' en el ON)
+         * para incluir también a los clientes que aún tienen 0 mascotas registradas.
+         */
         $sql = "SELECT
                     usuarios.id,
                     usuarios.nombre,
@@ -98,6 +113,11 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
                 <a href="clientes.php" class="activo" aria-current="page">
                     <span aria-hidden="true">👥</span>
                     Clientes
+                </a>
+
+                <a href="mensajes.php">
+                    <span aria-hidden="true">✉️</span>
+                    Mensajes
                 </a>
             </nav>
 

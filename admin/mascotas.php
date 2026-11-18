@@ -1,4 +1,14 @@
 <?php
+/**
+ * Controlador de listado general y baja lógica (Soft Delete) de mascotas.
+ *
+ * Presenta el catálogo completo de mascotas activas vinculadas con su dueño y
+ * procesa las solicitudes POST para desactivar registros sin eliminarlos físicamente.
+ *
+ * @package RegistroMascotas\Admin
+ */
+
+/* Protege la vista exigiendo sesión válida con rol 'admin' antes de ejecutar consultas */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('admin', '../login.php');
 
@@ -19,12 +29,17 @@ $etiquetasEspecie = [
 if (!$pdo) {
     $errorListado = $errorConexion ?? 'No se pudo conectar con la base de datos para consultar las mascotas.';
 } else {
-    // Borrado lógico (estado = 'Inactivo') mediante método POST
+    /*
+     * Borrado lógico (Soft Delete) por método POST:
+     * Actualiza la columna estado a 'Inactivo' en lugar de usar DELETE FROM, conservando
+     * la integridad referencial y el historial en la base de datos.
+     */
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['accion'] ?? '') === 'eliminar') {
         $eliminarId = filter_var($_POST['mascota_id'] ?? null, FILTER_VALIDATE_INT);
 
         if ($eliminarId !== false && $eliminarId !== null && $eliminarId > 0) {
             try {
+                /* Filtra por estado_actual = 'Activo' para asegurar que solo se desactiven registros vigentes */
                 $stmtEliminar = $pdo->prepare(
                     "UPDATE mascotas SET estado = :estado WHERE id = :id AND estado = :estado_actual"
                 );
@@ -34,6 +49,10 @@ if (!$pdo) {
                     ':estado_actual' => 'Activo',
                 ]);
 
+                /*
+                 * Si rowCount() confirma la actualización, aplica el patrón PRG (Post/Redirect/Get)
+                 * redirigiendo con ?eliminado=1 para disparar el Toast y evitar reenvíos al recargar.
+                 */
                 if ($stmtEliminar->rowCount() > 0) {
                     header('Location: mascotas.php?eliminado=1');
                     exit;
@@ -49,6 +68,10 @@ if (!$pdo) {
         }
     }
 
+    /*
+     * Consulta principal del catálogo: une mascotas y usuarios mediante INNER JOIN,
+     * recuperando únicamente registros donde tanto la mascota como el dueño estén 'Activo'.
+     */
     try {
         $sql = "SELECT
                     mascotas.id,
@@ -137,6 +160,11 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
                 <a href="clientes.php">
                     <span aria-hidden="true">👥</span>
                     Clientes
+                </a>
+
+                <a href="mensajes.php">
+                    <span aria-hidden="true">✉️</span>
+                    Mensajes
                 </a>
             </nav>
 

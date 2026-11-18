@@ -221,3 +221,34 @@ erDiagram
 - **Cuentas de prueba en `db/import.sql`:**
   - **Administrador:** `admin@veterinaria.com` | Contraseña: `12345678`
   - **Cliente:** `laura@example.com` | Contraseña: `12345678` (con las mascotas *Max* — Perro, Golden Retriever — y *Luna* — Gato, Siamés —).
+
+---
+
+## Actualización técnica del 17 de noviembre de 2026: Bandeja de Mensajes y Respuesta en Gmail
+
+### 19. Bandeja Administrativa de Mensajes (`admin/mensajes.php`)
+
+Para evitar que el personal administrativo dependa de phpMyAdmin o acceso directo a MySQL para revisar las consultas enviadas desde `contacto.php`, se incorporó el módulo `admin/mensajes.php` integrado en la barra lateral de todo `admin/` y en los accesos rápidos de `admin/panel.php`:
+
+- **Protección RBAC:** Exige sesión activa con rol `admin` mediante `requerirRol('admin', '../login.php')` antes de cualquier salida HTML.
+- **Consulta ordenada:** Recupera `id, nombre, correo, asunto, mensaje, creado_en` de `mensajes_contacto` con `ORDER BY creado_en DESC, id DESC`, mostrando las consultas más recientes primero.
+- **Redirección directa a Gmail (`construirUrlGmail()`):**
+  - Cada registro incluye un enlace **`Responder en Gmail ↗`** apuntando a `https://mail.google.com/mail/?view=cm&fs=1` con los parámetros `to`, `su` (`Re: <asunto>`) y `body` (saludo personalizado) codificados con `rawurlencode()`.
+  - Además, la cabecera ofrece un acceso directo **`Abrir Gmail ↗`** (`https://mail.google.com/`).
+  - Ambos enlaces utilizan `target="_blank" rel="noopener noreferrer"` para abrir Gmail en una pestaña nueva sin perder la sesión del panel ni exponer `window.opener`.
+- **Lectura en ventana modal vía `data-attributes`:** La tabla muestra únicamente el **Asunto** en la vista previa; el botón **`👁 Leer mensaje`** almacena `data-nombre`, `data-correo`, `data-asunto`, `data-mensaje` y `data-gmail` para poblar `#modal-mensaje` dinámicamente mediante `textContent` sin peticiones adicionales al servidor, heredando las variables de Modo Claro y Modo Oscuro de `tema.css`.
+- **Filtrado instantáneo (`assets/js/admin-mensajes.js`):** Permite buscar por nombre, correo, asunto o contenido usando normalización Unicode `NFD`.
+
+---
+
+## Estándares de Documentación
+
+El código fuente del proyecto está documentado internamente en español mediante **PHPDoc** y **JSDoc** con un enfoque estricto de **concisión técnica y justificación estructural** (máximo 1 a 2 líneas por bloque), explicando el *cómo* y el *por qué* arquitectónico o de seguridad sin saturar visualmente los archivos ni alterar la lógica funcional:
+
+- **PHPDoc (`/** ... */`) en Backend (`includes/`, `admin/`, `cliente/` y raíz):**
+  - Cabeceras de nivel de archivo (`@package`, `@var`) que sintetizan en una línea la responsabilidad transaccional o de control de acceso del script.
+  - Documentación de funciones (`destruirSesionYRedirigir()`, `requerirRol()`, `formatearEdad()`) con `@param` y `@return` tipados, justificando decisiones críticas como la invalidación de cookies `PHPSESSID`, la exposición de `$pdo` en el ámbito global o la verificación en caliente contra MySQL.
+- **Comentarios de bloque de alta densidad técnica (`/* ... */`):**
+  - Documentan en 1 línea las garantías de seguridad e integridad en cada fase del flujo: desactivación de emulación de *prepared statements* (`ATTR_EMULATE_PREPARES = false`) contra inyección SQL, rotación de `session_id` (`session_regenerate_id(true)`) contra *Session Fixation*, aislamiento por `:usuario_id` contra vulnerabilidades IDOR, patrón PRG (*Post/Redirect/Get*) y preservación referencial mediante *Soft Delete* (`estado = 'Inactivo'`).
+- **JSDoc (`/** ... */`) en Frontend (`assets/js/`):**
+  - Bloques concisos con `@param` y `@returns` que explican los mecanismos del DOM: sincronización de `[data-theme="dark"]` con `localStorage`, contenedor *Singleton* ARIA live y `MutationObserver` para notificaciones Toast reactivas, descomposición canónica Unicode `NFD` (`U+0300–U+036F`) para búsqueda insensible a tildes e intercepción de eventos `submit` con `preventDefault()`.

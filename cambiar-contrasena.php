@@ -1,4 +1,14 @@
 <?php
+/**
+ * Controlador de cambio de contraseña para usuarios con sesión activa.
+ *
+ * Verifica la identidad del usuario comprobando su contraseña actual mediante
+ * password_verify() antes de generar y guardar el nuevo hash en MySQL.
+ *
+ * @package RegistroMascotas
+ */
+
+/* Exige que exista una sesión autenticada antes de mostrar o procesar el formulario */
 require_once __DIR__ . '/includes/sesion.php';
 requerirRol(null, 'login.php');
 
@@ -7,6 +17,7 @@ require_once __DIR__ . '/includes/conexion.php';
 $mensajeTexto = '';
 $mensajeTipo = '';
 
+/* Valida que la nueva clave tenga al menos 8 caracteres, coincida con su confirmación y sea distinta de la actual */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $actual    = (string) ($_POST['contrasena_actual'] ?? '');
     $nueva     = (string) ($_POST['nueva_contrasena'] ?? '');
@@ -29,6 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensajeTipo = 'error';
     } else {
         try {
+            /*
+             * Consulta el hash actual del usuario autenticado ($_SESSION['usuario_id']).
+             * Si password_verify() confirma la clave actual, cifra la nueva con password_hash() y ejecuta UPDATE.
+             */
             $stmtUsuario = $pdo->prepare(
                 "SELECT id, contrasena FROM usuarios WHERE id = :id AND estado = :estado LIMIT 1"
             );

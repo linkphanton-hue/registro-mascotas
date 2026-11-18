@@ -1,4 +1,14 @@
 <?php
+/**
+ * Controlador de autenticación e inicio de sesión.
+ *
+ * Verifica las credenciales ingresadas contra la tabla usuarios de MySQL,
+ * valida el hash criptográfico con password_verify() y redirige al panel
+ * correspondiente según el rol ('admin' o 'cliente').
+ *
+ * @package RegistroMascotas
+ */
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -9,6 +19,7 @@ $mensajeTexto = '';
 $mensajeTipo = '';
 $correoIngresado = '';
 
+/* Procesa el envío POST validando que ambos campos se hayan recibido y que exista conexión PDO */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $correoIngresado = trim((string) ($_POST['correo'] ?? ''));
     $contrasena      = (string) ($_POST['contrasena'] ?? '');
@@ -21,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensajeTipo = 'error';
     } else {
         try {
+            /* Busca el usuario por correo exigiendo que su estado sea 'Activo' */
             $stmt = $pdo->prepare(
                 "SELECT id, nombre, correo, contrasena, rol FROM usuarios WHERE correo = :correo AND estado = :estado LIMIT 1"
             );
@@ -30,6 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             $usuario = $stmt->fetch();
 
+            /*
+             * Si el hash coincide (password_verify), regenera el ID de sesión con
+             * session_regenerate_id(true) para prevenir ataques de fijación de sesión
+             * y redirige según el rol del usuario.
+             */
             if ($usuario && password_verify($contrasena, $usuario['contrasena'])) {
                 session_regenerate_id(true);
                 $_SESSION['usuario_id']     = (int) $usuario['id'];

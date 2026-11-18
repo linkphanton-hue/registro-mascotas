@@ -1,4 +1,14 @@
 <?php
+/**
+ * Controlador de registro público de nuevos clientes.
+ *
+ * Valida los datos del formulario, comprueba que el correo no esté duplicado,
+ * almacena la cuenta con contraseña cifrada (password_hash) e inicia la sesión
+ * automáticamente hacia el panel del cliente.
+ *
+ * @package RegistroMascotas
+ */
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -12,6 +22,7 @@ $valores = [
     'correo' => '',
 ];
 
+/* Recepción y validación en servidor de nombre, correo electrónico y contraseña (>= 8 caracteres) */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre       = trim((string) ($_POST['nombre'] ?? ''));
     $correo       = trim((string) ($_POST['correo'] ?? ''));
@@ -40,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensajeTipo = 'error';
     } else {
         try {
+            /* Verifica que el correo no exista en la tabla usuarios antes de insertar */
             $stmtVerificar = $pdo->prepare(
                 "SELECT id FROM usuarios WHERE correo = :correo LIMIT 1"
             );
@@ -61,6 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':estado'     => 'Activo',
                 ]);
 
+                /*
+                 * Recupera el ID recién generado con lastInsertId(), regenera el ID de sesión
+                 * y redirige directamente al panel del cliente.
+                 */
                 $nuevoId = (int) $pdo->lastInsertId();
                 session_regenerate_id(true);
                 $_SESSION['usuario_id']     = $nuevoId;
