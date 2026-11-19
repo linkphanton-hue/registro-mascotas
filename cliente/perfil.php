@@ -1,4 +1,15 @@
 <?php
+/**
+ * Controlador de consulta y edición del perfil personal del cliente.
+ *
+ * Obtiene los datos de la cuenta directamente desde $_SESSION['usuario_id']
+ * (sin utilizar usuarios por defecto) y procesa la actualización de nombre
+ * y correo electrónico mediante método POST.
+ *
+ * @package RegistroMascotas\Cliente
+ */
+
+/* Exige sesión activa con rol 'cliente' */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('cliente', '../login.php');
 
@@ -13,6 +24,10 @@ $tipoToast     = '';
 
 if ($pdo) {
     try {
+        /*
+         * Recupera los datos actuales del cliente desde MySQL verificando que siga 'Activo'.
+         * Si el registro no existe o fue desactivado, destruye la sesión de inmediato.
+         */
         $stmtCliente = $pdo->prepare(
             "SELECT id, nombre, correo FROM usuarios WHERE id = :id AND rol = :rol AND estado = :estado LIMIT 1"
         );
@@ -32,6 +47,10 @@ if ($pdo) {
         $correoCliente = trim((string) $clienteActual['correo']);
         $inicialAvatar = mb_strtoupper(mb_substr($nombreCliente, 0, 1));
 
+        /*
+         * Procesamiento POST de edición de perfil:
+         * Valida que el nombre no esté vacío y que el correo tenga formato válido.
+         */
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nuevoNombre  = trim((string) ($_POST['nombre'] ?? ''));
             $nuevoCorreo  = trim((string) ($_POST['correo'] ?? ''));
@@ -44,6 +63,10 @@ if ($pdo) {
                 $avisoEdicion = 'Ingresa un correo electrónico válido.';
                 $tipoToast    = 'error';
             } else {
+                /*
+                 * Comprueba que el nuevo correo electrónico no esté registrado en otra cuenta
+                 * (id != :id) antes de ejecutar el UPDATE y actualizar las variables de $_SESSION.
+                 */
                 $stmtDuplicado = $pdo->prepare(
                     "SELECT id FROM usuarios WHERE correo = :correo AND id != :id LIMIT 1"
                 );

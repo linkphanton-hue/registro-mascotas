@@ -1,7 +1,11 @@
 <?php
 /**
- * Cierre seguro de sesión de usuario.
- * Limpia las variables de sesión, invalida la cookie y destruye la sesión en el servidor.
+ * Controlador de cierre seguro de sesión.
+ *
+ * Limpia el arreglo $_SESSION en memoria, caduca la cookie PHPSESSID en el
+ * navegador y destruye el registro de sesión en el servidor antes de redirigir.
+ *
+ * @package RegistroMascotas
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -11,6 +15,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $_SESSION = [];
 session_unset();
 
+/* Invalida la cookie de sesión en el navegador manteniendo los parámetros originales de seguridad */
 if (ini_get('session.use_cookies')) {
     $parametros = session_get_cookie_params();
     setcookie(

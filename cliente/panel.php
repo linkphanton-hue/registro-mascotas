@@ -1,4 +1,14 @@
 <?php
+/**
+ * Panel principal del cliente autenticado (Mi Espacio).
+ *
+ * Muestra la bienvenida personalizada, el conteo de mascotas registradas a su
+ * nombre y las tarjetas de resumen consultadas mediante su ID de sesión.
+ *
+ * @package RegistroMascotas\Cliente
+ */
+
+/* Exige sesión activa con rol 'cliente'; impide el acceso sin autenticar o con otro rol */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('cliente', '../login.php');
 
@@ -22,6 +32,10 @@ $etiquetasEspecie = [
 
 if ($pdo) {
     try {
+        /*
+         * Verifica que la cuenta del cliente en $_SESSION['usuario_id'] siga 'Activo'
+         * en la base de datos; si fue desactivada, destruye la sesión y redirige a login.php.
+         */
         $stmtCliente = $pdo->prepare(
             "SELECT id, nombre FROM usuarios WHERE id = :id AND rol = :rol AND estado = :estado LIMIT 1"
         );
@@ -42,6 +56,10 @@ if ($pdo) {
         $partesNombre  = preg_split('/\s+/', $nombreCliente);
         $primerNombre  = $partesNombre[0] ?: $nombreCliente;
 
+        /*
+         * Protección anti-IDOR: filtra las mascotas exclusivamente por el :usuario_id
+         * extraído de la sesión activa, garantizando que cada cliente vea solo sus mascotas.
+         */
         $stmtMascotas = $pdo->prepare(
             "SELECT id, nombre, especie, raza, edad_anios, edad_meses FROM mascotas WHERE usuario_id = :usuario_id AND estado = :estado ORDER BY id ASC"
         );

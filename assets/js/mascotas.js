@@ -1,3 +1,10 @@
+/**
+ * Filtro interactivo por especie para la vista de tarjetas del cliente (mis-mascotas.php).
+ *
+ * Muestra u oculta las tarjetas (.tarjeta-mascota) según el valor de su atributo
+ * data-especie y actualiza el contador de coincidencias.
+ */
+
 const filtroEspecie = document.getElementById("filtro-especie");
 const tarjetasMascotas = document.querySelectorAll(
     ".tarjeta-mascota[data-especie]"
@@ -5,6 +12,12 @@ const tarjetasMascotas = document.querySelectorAll(
 const resultadoFiltro = document.getElementById("resultado-filtro");
 const listadoVacio = document.getElementById("listado-vacio");
 
+/**
+ * Compara la especie seleccionada en el <select> con el atributo data-especie
+ * de cada tarjeta, actualiza el texto de estado y muestra #listado-vacio si no hay resultados.
+ *
+ * @returns {void}
+ */
 /* Muestra únicamente las tarjetas de la especie seleccionada. */
 function filtrarMascotas() {
     const especieSeleccionada = filtroEspecie.value;

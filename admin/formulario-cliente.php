@@ -1,4 +1,15 @@
 <?php
+/**
+ * Controlador de alta (INSERT) y edición (UPDATE) de cuentas de cliente.
+ *
+ * Permite al administrador registrar nuevos dueños o actualizar sus datos
+ * personales y contraseña, garantizando la unicidad del correo electrónico
+ * y el cifrado seguro de claves con password_hash().
+ *
+ * @package RegistroMascotas\Admin
+ */
+
+/* Exige sesión activa con rol 'admin' antes de procesar la vista */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('admin', '../login.php');
 
@@ -7,6 +18,10 @@ require_once __DIR__ . '/../includes/conexion.php';
 $mensajeTexto = '';
 $mensajeTipo = '';
 
+/*
+ * Determina si el formulario opera en modo edición (?id= entero positivo)
+ * o en modo de registro de un nuevo cliente.
+ */
 $clienteId = filter_var($_GET['id'] ?? ($_POST['id'] ?? null), FILTER_VALIDATE_INT);
 $modoEdicion = ($clienteId !== false && $clienteId !== null && $clienteId > 0);
 
@@ -19,6 +34,11 @@ if (!$pdo) {
     $mensajeTexto = $errorConexion ?? 'No se pudo conectar con la base de datos.';
     $mensajeTipo = 'error';
 } else {
+    /*
+     * Precarga en modo edición (GET):
+     * Consulta el nombre y correo actuales del cliente verificando que tenga
+     * rol 'cliente' y estado 'Activo' en la base de datos.
+     */
     if ($modoEdicion && $_SERVER['REQUEST_METHOD'] !== 'POST') {
         try {
             $stmtCargar = $pdo->prepare(
@@ -47,6 +67,11 @@ if (!$pdo) {
         }
     }
 
+    /*
+     * Procesamiento del formulario por método POST:
+     * Valida nombre, formato de correo electrónico, longitud mínima de contraseña (8 caracteres)
+     * y coincidencia entre la contraseña y su confirmación.
+     */
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nombre       = trim((string) ($_POST['nombre'] ?? ''));
         $correo       = trim((string) ($_POST['correo'] ?? ''));
@@ -75,7 +100,11 @@ if (!$pdo) {
             $mensajeTipo = 'error';
         } else {
             try {
-                // Verifica que el correo no esté registrado en otro usuario
+                /*
+                 * Verificación de correo único (UNIQUE):
+                 * Comprueba que el correo no esté asignado a otra cuenta en la tabla usuarios.
+                 * En modo edición se excluye el propio ID del cliente (AND id != :id).
+                 */
                 $sqlCorreo = "SELECT id FROM usuarios WHERE correo = :correo";
                 $paramCorreo = [':correo' => $correo];
 
@@ -104,6 +133,11 @@ if (!$pdo) {
                         $mensajeTexto = 'El cliente solicitado no existe o se encuentra inactivo.';
                         $mensajeTipo = 'error';
                     } else {
+                        /*
+                         * Actualización del cliente (UPDATE):
+                         * Si se proporcionó una nueva contraseña, genera su hash bcrypt con password_hash();
+                         * si se dejó en blanco, actualiza únicamente el nombre y el correo.
+                         */
                         if ($contrasena !== '') {
                             $hash = password_hash($contrasena, PASSWORD_DEFAULT);
                             $stmtActualizar = $pdo->prepare(
@@ -134,6 +168,10 @@ if (!$pdo) {
                         $mensajeTipo = 'informacion';
                     }
                 } else {
+                    /*
+                     * Creación de nuevo cliente (INSERT):
+                     * Cifra la contraseña inicial con password_hash() y asigna rol 'cliente' y estado 'Activo'.
+                     */
                     $hash = password_hash($contrasena, PASSWORD_DEFAULT);
                     $stmtInsertar = $pdo->prepare(
                         "INSERT INTO usuarios (nombre, correo, contrasena, rol, estado) VALUES (:nombre, :correo, :contrasena, :rol, :estado)"
@@ -223,6 +261,11 @@ $textoBoton   = $modoEdicion ? 'Guardar cambios' : 'Registrar cliente';
                 <a href="clientes.php" class="activo" aria-current="page">
                     <span aria-hidden="true">👥</span>
                     Clientes
+                </a>
+
+                <a href="mensajes.php">
+                    <span aria-hidden="true">✉️</span>
+                    Mensajes
                 </a>
             </nav>
 

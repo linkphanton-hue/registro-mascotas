@@ -1,3 +1,10 @@
+/**
+ * Validación en el navegador para el formulario administrativo de mascotas.
+ *
+ * Verifica antes del envío que nombre y raza no contengan solo espacios, que se
+ * haya elegido especie y dueño, y que la edad esté dentro de los rangos permitidos.
+ */
+
 const formularioMascota = document.getElementById(
     "formulario-mascota"
 );
@@ -11,16 +18,29 @@ if (formularioMascota) {
     const dueno = document.getElementById("dueno");
     const mensaje = document.getElementById("mensaje-mascota");
 
+    /**
+     * Escribe el mensaje de validación en #mensaje-mascota y asigna la clase CSS
+     * de estado ('error' o 'informacion'), lo que dispara además el Toast flotante.
+     *
+     * @param {string} texto Mensaje descriptivo para el administrador.
+     * @param {"error"|"informacion"} tipo Clase de estilo según el resultado.
+     * @returns {void}
+     */
     function mostrarMensajeMascota(texto, tipo) {
         mensaje.textContent = texto;
         mensaje.className = `mensaje-admin ${tipo}`;
     }
 
+    /* Limpia cualquier aviso previo en cuanto el usuario edita un campo */
     formularioMascota.addEventListener("input", () => {
         mensaje.textContent = "";
         mensaje.className = "mensaje-admin";
     });
 
+    /*
+     * Intercepta el evento submit: solo invoca evento.preventDefault() cuando algún
+     * campo incumple las reglas, permitiendo que los formularios válidos lleguen a PHP.
+     */
     formularioMascota.addEventListener("submit", (evento) => {
         if (nombre.value.trim().length === 0) {
             evento.preventDefault();
