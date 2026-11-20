@@ -259,3 +259,60 @@ Mantener la congruencia de un dato desde la columna en MySQL hasta el formulario
 
 ### Estado al cierre del día
 El sistema de Registro de Mascotas queda completamente funcional en su base de datos, backend con PDO, CRUD de clientes y mascotas (con raza y edad en años y meses), autenticación y sesiones por rol, interfaz con Modo Oscuro y notificaciones Toast, y documentación actualizada al 9 de noviembre de 2026.
+
+## 17 de noviembre de 2026 - Documentación interna del código con PHPDoc y JSDoc (David)
+
+### Mi objetivo
+Cumplir con el requerimiento académico de documentar internamente el código fuente del proyecto (funciones, componentes y flujo general en PHP y JavaScript) aplicando los estándares PHPDoc y JSDoc bajo un criterio de concisión técnica y justificación estructural, sin alterar ninguna línea de código funcional.
+
+### Mi avance
+En una primera pasada incorporé bloques PHPDoc y JSDoc en los módulos centrales (`includes/`), los controladores CRUD (`admin/` y `cliente/`), los scripts de autenticación en la raíz y los módulos JavaScript (`assets/js/`). Posteriormente, iteré sobre toda la documentación interna para elevar su nivel analítico y lograr un estándar profesional: sinteticé cada comentario a un máximo de 1 o 2 líneas enfocadas en explicar el *cómo* y el *por qué* técnico sin saturar visualmente los archivos.
+
+En los archivos PHP (`includes/config.php`, `includes/conexion.php`, `includes/sesion.php`, `includes/formato.php`, `admin/*`, `cliente/*`, `login.php`, `registro.php`, `cambiar-contrasena.php`, `logout.php`, `cerrar-sesion.php` y `contacto.php`) reemplacé las descripciones extensas por anotaciones directas sobre control de acceso RBAC, prevención de inyección SQL mediante *prepared statements* nativos (`ATTR_EMULATE_PREPARES = false`), mitigación de *Session Fixation* (`session_regenerate_id(true)`), protección anti-IDOR vinculada a `$_SESSION['usuario_id']`, patrón PRG tras bajas lógicas y preservación de integridad referencial.
+
+En `assets/js/` (`interfaz.js`, `formulario-mascota.js`, `formulario-cliente.js`, `admin-mascotas.js`, `admin-clientes.js`, `mascotas.js`, `cambiar-contrasena.js` y `principal.js`) refiné los bloques JSDoc para explicar de forma breve y precisa el uso de `MutationObserver` en los Toasts, la normalización Unicode `NFD` para búsquedas sin tildes, la persistencia de `[data-theme="dark"]` en `localStorage` y la intercepción condicional con `preventDefault()`. Finalmente, actualicé la sección "Estándares de Documentación" en `docs/manual.md`.
+
+### Resultados registrados en la revisión
+- 18 archivos PHP y 8 archivos JavaScript refinados con comentarios PHPDoc/JSDoc breves (1–2 líneas), analíticos y altamente técnicos.
+- Verificación de sintaxis con `php -l` superada en todos los archivos con cero líneas de código funcional modificadas.
+- Sección "Estándares de Documentación" en `docs/manual.md` actualizada con el enfoque de concisión técnica y justificación estructural.
+
+### Lo que aprendí
+Un buen comentario técnico no repite lo que el código ya dice a simple vista, sino que condensa en una sola línea la razón arquitectónica o de seguridad detrás de cada instrucción (como por qué se desactiva la emulación de consultas en PDO, por qué se regenera el ID de sesión tras autenticar o por qué se filtra por `$_SESSION['usuario_id']`), mejorando la legibilidad sin generar ruido visual.
+
+## 17 de noviembre de 2026 - Bandeja administrativa de mensajes y respuesta directa por Gmail (David)
+
+### Mi objetivo
+Habilitar un módulo web exclusivo en el panel de administración para consultar los mensajes enviados desde `contacto.php` sin necesidad de acceder a phpMyAdmin o SQL, incorporando además un enlace directo a Gmail para responder a cada cliente en un clic.
+
+### Mi avance
+Construí `admin/mensajes.php` protegido con control de acceso por rol (`requerirRol('admin')`), conectado mediante consulta preparada PDO a la tabla `mensajes_contacto` ordenando las consultas de la más reciente a la más antigua. Implementé la función `construirUrlGmail()` para generar la URL del compositor web de Gmail (`https://mail.google.com/mail/?view=cm&fs=1`) prellenando destinatario (`to`), asunto (`Re: ...`) y saludo inicial codificados con `rawurlencode()`, junto a un acceso general `Abrir Gmail ↗` en la cabecera, ambos en pestaña nueva con `target="_blank" rel="noopener noreferrer"`.
+
+Creé `assets/css/admin-mensajes.css` y `assets/js/admin-mensajes.js` (con buscador instantáneo insensible a tildes mediante normalización Unicode `NFD`), añadí el módulo `mensajes` con acento azul cobalto en `assets/css/tema.css` y actualicé la barra lateral de todas las vistas de `admin/` (`panel.php`, `mascotas.php`, `formulario-mascota.php`, `clientes.php`, `formulario-cliente.php`). Además, integré en `admin/panel.php` el conteo real de mensajes dentro de las métricas y una tercera tarjeta de acceso rápido en `assets/css/admin-panel.css`. Todo el código nuevo se documentó con PHPDoc, JSDoc y comentarios técnicos concisos, actualizando `docs/manual.md`, `docs/organizacion-estilos.md`, `docs/estado-proyecto.md` y esta bitácora.
+
+### Resultados registrados en la revisión
+- Verificación de sintaxis PHP (`php -l`) aprobada sin errores en los archivos nuevos y actualizados de `admin/`.
+- Bandeja de mensajes accesible desde la navegación lateral y tarjetas rápidas de `admin/panel.php`, con redirección directa a Gmail verificada.
+- Documentación de código y carpeta `docs/` actualizadas manteniendo el estándar del proyecto.
+
+### Lo que aprendí
+Ofrecer una bandeja administrativa conectada directamente a `mensajes_contacto` y generar enlaces de redacción prellenados hacia Gmail con `rawurlencode()` y `rel="noopener noreferrer"` elimina la dependencia técnica de consultar tablas SQL manualmente y agiliza la atención al cliente sin requerir configuración de un servidor SMTP propio.
+
+## 17 de noviembre de 2026 - Optimización UI de la bandeja de mensajes mediante ventana modal y data-attributes (David)
+
+### Mi objetivo
+Optimizar la legibilidad e interfaz visual de `admin/mensajes.php` separando el resumen tabular del cuerpo completo del mensaje, implementando una ventana modal accesible compatible con Modo Claro y Modo Oscuro sin alterar la lógica de inserción en base de datos.
+
+### Mi avance
+Refactoricé la tabla administrativa en `admin/mensajes.php` para mostrar en la columna **Asunto** únicamente el título de la consulta y añadí el botón discreto `👁 Leer mensaje` junto a `Responder en Gmail ↗` dentro de la columna de acciones. Inyecté los datos de cada registro (`data-nombre`, `data-correo`, `data-asunto`, `data-mensaje` y `data-gmail`) directamente en el botón para evitar peticiones adicionales al servidor.
+
+Diseñé el modal `#modal-mensaje` en `admin/mensajes.php` y `assets/css/admin-mensajes.css` consumiendo las variables CSS de `assets/css/tema.css` (`--color-superficie`, `--color-superficie-alt`, `--color-texto`, `--color-borde`, `--acento-modulo`), garantizando herencia automática de colores en Modo Claro y Modo Oscuro. En `assets/js/admin-mensajes.js` implementé la delegación de eventos para leer los `data-attributes` (`dataset`), poblar el modal mediante `textContent` (prevención de XSS en el DOM) y cerrarlo con el botón `✕`, el botón `Cerrar`, la tecla `Escape` o al hacer clic fuera de la ventana, manteniendo además el buscador funcional sobre el texto oculto del mensaje y documentando cada función con PHPDoc y JSDoc concisos.
+
+### Resultados registrados en la revisión
+- Tabla de `admin/mensajes.php` limpia mostrando solo Remitente, Correo, Asunto, Fecha y Acciones, manteniendo un DOM ordenado.
+- Modal de lectura completa probado con herencia de tema claro/oscuro, apertura dinámica vía `data-attributes` y cierres accesibles (`✕`, clic externo y `Escape`).
+- Verificación de sintaxis PHP (`php -l`) y pruebas de renderizado HTTP aprobadas sin errores.
+
+### Lo que aprendí
+Separar la vista de resumen tabular del contenido extenso mediante ventanas modales alimentadas por `data-attributes` mejora notablemente la experiencia de usuario y mantiene un DOM ligero, mientras que apoyarse en variables CSS transversales asegura que los nuevos componentes hereden de inmediato la paleta de Modo Claro y Modo Oscuro sin duplicar reglas.
+

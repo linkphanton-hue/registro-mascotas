@@ -499,3 +499,9 @@ h2 {
 .tarjeta-preventiva {
     --imagen-tarjeta: url("../img/atencion preventiva.jpeg");
 }
+
+
+/* Mantiene las tarjetas de contacto en una sola columna. */
+.rejilla.rejilla-contacto {
+    grid-template-columns: 1fr;
+}

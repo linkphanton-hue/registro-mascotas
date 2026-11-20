@@ -1,4 +1,14 @@
 <?php
+/**
+ * Controlador del listado administrativo de clientes.
+ *
+ * Consulta todos los usuarios activos con rol 'cliente' y calcula cuántas
+ * mascotas activas tiene registrado cada dueño para mostrarlo en la tabla.
+ *
+ * @package RegistroMascotas\Admin
+ */
+
+/* Exige sesión activa con rol 'admin'; redirige a login.php si no cumple */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('admin', '../login.php');
 
@@ -11,6 +21,11 @@ if (!$pdo) {
     $errorListado = $errorConexion ?? 'No se pudo conectar con la base de datos para consultar los clientes.';
 } else {
     try {
+        /*
+         * Consulta preparada con LEFT JOIN y GROUP BY:
+         * Se utiliza LEFT JOIN (con la condición mascotas.estado = 'Activo' en el ON)
+         * para incluir también a los clientes que aún tienen 0 mascotas registradas.
+         */
         $sql = "SELECT
                     usuarios.id,
                     usuarios.nombre,
@@ -49,13 +64,8 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
 
     <title>Clientes | Administración | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
@@ -98,6 +108,15 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
                 <a href="clientes.php" class="activo" aria-current="page">
                     <span aria-hidden="true">👥</span>
                     Clientes
+                </a>
+
+                <a href="mensajes.php">
+                    <span aria-hidden="true">✉️</span>
+                    Mensajes
+                </a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 
@@ -159,7 +178,7 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
         >
             <table id="tabla-clientes" class="tabla-admin">
                 <caption class="solo-lectores">
-                    Clientes registrados con datos de ejemplo
+                    Clientes registrados
                 </caption>
 
                 <thead>
@@ -193,7 +212,7 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
                                         type="button"
                                         class="accion-tabla accion-editar"
                                         aria-label="Editar a <?= htmlspecialchars($cliente['nombre'], ENT_QUOTES, 'UTF-8') ?>"
-                                        onclick="window.location.href='formulario-cliente.php?id=<?= (int) $cliente['id'] ?>'"
+                                        data-destino="formulario-cliente.php?id=<?= (int) $cliente['id'] ?>"
                                     >
                                         Editar
                                     </button>
@@ -220,9 +239,6 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
         </div>
     </section>
 
-    <p class="aviso-demostracion">
-        Datos de ejemplo. La edición todavía no está habilitada.
-    </p>
 </main>
     </div>
 </body>

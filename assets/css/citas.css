@@ -1,0 +1,37 @@
+/* Distribución específica de citas; campos, tablas y colores usan las bases compartidas. */
+.citas-contenido {
+    display: grid;
+    gap: 28px;
+}
+
+.citas-contenido > section {
+    min-width: 0;
+}
+
+.citas-estado {
+    display: inline-block;
+    padding: 6px 10px;
+    color: var(--color-texto);
+    background: var(--color-superficie-destacada);
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.citas-motivo {
+    min-width: 180px;
+    max-width: 300px;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.citas-acciones {
+    margin: 0;
+}
+
+.citas-acciones button {
+    cursor: pointer;
+}
+
+.citas-tabla {
+    min-width: 760px;
+}

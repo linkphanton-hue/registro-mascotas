@@ -1,3 +1,9 @@
+/**
+ * Búsqueda instantánea por nombre o correo en la tabla administrativa de clientes.
+ *
+ * Permite localizar clientes sin importar mayúsculas, minúsculas o tildes.
+ */
+
 const buscarCliente = document.getElementById("buscar-cliente");
 
 const filasClientes = document.querySelectorAll(
@@ -10,18 +16,12 @@ const resultadoClientes = document.getElementById(
 
 const clientesVacio = document.getElementById("clientes-vacio");
 
-/*
-    Convierte el texto a minúsculas y elimina acentos.
-    Así, escribir "perez" también encuentra "Pérez".
-*/
-function normalizarTexto(texto) {
-    return texto
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
-}
-
+/**
+ * Compara el término buscado contra el nombre y correo normalizados de cada fila,
+ * alterna la visibilidad (fila.hidden) y actualiza el contador y el estado vacío.
+ *
+ * @returns {void}
+ */
 /* Busca únicamente en el nombre y el correo de cada cliente. */
 function filtrarClientes() {
     const busqueda = normalizarTexto(buscarCliente.value);

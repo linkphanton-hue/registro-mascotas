@@ -1,4 +1,14 @@
 <?php
+/**
+ * Catálogo detallado de mascotas del cliente autenticado.
+ *
+ * Lista todas las mascotas activas pertenecientes al titular de la sesión
+ * e incorpora atributos data-especie en cada tarjeta para el filtrado con JS.
+ *
+ * @package RegistroMascotas\Cliente
+ */
+
+/* Exige sesión activa con rol 'cliente' antes de ejecutar la consulta */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('cliente', '../login.php');
 
@@ -20,6 +30,10 @@ $etiquetasEspecie = [
 
 if ($pdo) {
     try {
+        /*
+         * Confirma que el usuario de la sesión exista y permanezca 'Activo' en MySQL;
+         * en caso contrario revoca la sesión inmediatamente.
+         */
         $stmtCliente = $pdo->prepare(
             "SELECT id, nombre FROM usuarios WHERE id = :id AND rol = :rol AND estado = :estado LIMIT 1"
         );
@@ -38,6 +52,10 @@ if ($pdo) {
         $nombreCliente = trim((string) $clienteActual['nombre']);
         $inicialAvatar = mb_strtoupper(mb_substr($nombreCliente, 0, 1));
 
+        /*
+         * Consulta preparada acotada por :usuario_id (tomado de $_SESSION) y estado 'Activo'
+         * para impedir que un cliente consulte registros ajenos.
+         */
         $stmtMascotas = $pdo->prepare(
             "SELECT id, nombre, especie, raza, edad_anios, edad_meses FROM mascotas WHERE usuario_id = :usuario_id AND estado = :estado ORDER BY id ASC"
         );
@@ -62,13 +80,8 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
 
     <title>Mis mascotas | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
@@ -109,6 +122,10 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
                 <a href="perfil.php">
                     <span aria-hidden="true">👤</span>
                     Mi perfil
+                </a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 
@@ -225,9 +242,6 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
         </div>
     </section>
 
-    <p class="aviso-demostracion">
-        Vista de práctica con datos de ejemplo.
-    </p>
 
         </main>
     </div>

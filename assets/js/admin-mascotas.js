@@ -1,3 +1,10 @@
+/**
+ * Filtro interactivo por especie para la tabla administrativa de mascotas.
+ *
+ * Evalúa el atributo data-especie de cada fila renderizada por PHP para mostrar
+ * u ocultar registros en tiempo real sin recargar la página.
+ */
+
 const filtroAdmin = document.getElementById("filtro-especie");
 const filasMascotas = document.querySelectorAll(
     ".tabla-admin tbody tr[data-especie]"
@@ -6,6 +13,13 @@ const filasMascotas = document.querySelectorAll(
 const resultadoAdmin = document.getElementById("resultado-filtro");
 const filaVacia = document.getElementById("listado-vacio");
 
+/**
+ * Recorre las filas de la tabla, oculta aquellas que no coinciden con la especie
+ * seleccionada, actualiza el contador superior y muestra el bloque vacío si el
+ * resultado es 0.
+ *
+ * @returns {void}
+ */
 /* Filtra las filas sin modificar ni eliminar sus datos. */
 function filtrarMascotasAdmin() {
     const especie = filtroAdmin.value;

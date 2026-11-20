@@ -1,15 +1,15 @@
 # Estado del proyecto
 
-Actualizado: 9 de noviembre de 2026.
+Actualizado: 17 de noviembre de 2026.
 
 ## Dónde nos quedamos
-El sistema cuenta con todas sus pantallas públicas (`index.php`, `contacto.php`), del cliente (`cliente/panel.php`, `cliente/mis-mascotas.php`, `cliente/perfil.php`) y del administrador (`admin/panel.php`, `admin/mascotas.php`, `admin/formulario-mascota.php`, `admin/clientes.php`, `admin/formulario-cliente.php`) conectadas a MySQL mediante PDO y consultas preparadas. El CRUD completo de clientes y mascotas (incluyendo el campo manual de **Raza** y la edad detallada en años y meses), el inicio y cierre de sesión real por rol (`login.php`, `includes/sesion.php`, `logout.php`), el borrado lógico (`estado = 'Activo' / 'Inactivo'`), la base de datos activa (`registro_mascotas`) y la interfaz renovada (Modo Oscuro con `localStorage`, colores de identidad por módulo, notificaciones flotantes Toast y estados vacíos ilustrados) ya se encuentran 100% funcionales.
+El sistema cuenta con todas sus pantallas públicas (`index.php`, `contacto.php`), del cliente (`cliente/panel.php`, `cliente/mis-mascotas.php`, `cliente/perfil.php`) y del administrador (`admin/panel.php`, `admin/mascotas.php`, `admin/formulario-mascota.php`, `admin/clientes.php`, `admin/formulario-cliente.php`, `admin/mensajes.php`) conectadas a MySQL mediante PDO y consultas preparadas. El CRUD completo de clientes y mascotas (incluyendo el campo manual de **Raza** y la edad detallada en años y meses), la bandeja administrativa de mensajes de contacto con respuesta directa en Gmail, el inicio y cierre de sesión real por rol (`login.php`, `includes/sesion.php`, `logout.php`), el borrado lógico (`estado = 'Activo' / 'Inactivo'`), la base de datos activa (`registro_mascotas`) y la interfaz renovada (Modo Oscuro con `localStorage`, colores de identidad por módulo, notificaciones flotantes Toast y estados vacíos ilustrados) ya se encuentran 100% funcionales.
 
 ## Qué puedes probar ahora
 | Área | Disponible | Límite actual |
 |---|---|---|
 | Inicio público (`index.php`) | Presentación, servicios, misión, visión, objetivos, siete imágenes y Modo Oscuro | No hay citas ni video |
-| Contacto (`contacto.php`) | Formulario público conectado a MySQL (`mensajes_contacto`) con notificación Toast | No envía correo SMTP externo |
+| Contacto (`contacto.php`) | Formulario público conectado a MySQL (`mensajes_contacto`) con notificación Toast y lectura en `admin/mensajes.php` | No envía correo SMTP automático |
 | Login (`login.php`) | Autenticación real contra MySQL (`password_verify`), redirección por rol y aviso Toast | Sin bloqueo por intentos fallidos |
 | Registro público (`registro.php`) | Creación real de cuenta de cliente en MySQL (`password_hash`) e inicio de sesión automático | Sin verificación por correo |
 | Cierre de sesión (`logout.php`) | Limpieza de `$_SESSION`, expiración de cookie, `session_destroy()` y redirección a `login.php` | Operativo en todos los paneles |
@@ -23,6 +23,7 @@ El sistema cuenta con todas sus pantallas públicas (`index.php`, `contacto.php`
 | Formulario de mascotas (`admin/formulario-mascota.php`) | Protegido por rol `admin`; alta y edición en MySQL con nombre, especie, campo de texto Raza (`:raza`), edad en años/meses y dueño | Conectado a BD |
 | Clientes del administrador (`admin/clientes.php`) | Protegido por rol `admin`; tabla dinámica con conteo de mascotas (`LEFT JOIN`), búsqueda y edición | Conectado a BD |
 | Formulario de clientes (`admin/formulario-cliente.php`) | Protegido por rol `admin`; alta y edición real en MySQL con validación de correo único y `password_hash` | Conectado a BD |
+| Mensajes de contacto (`admin/mensajes.php`) | Protegido por rol `admin`; bandeja dinámica desde `mensajes_contacto`, búsqueda instantánea y botón de respuesta directa en Gmail | Abre compositor web de Gmail en nueva pestaña |
 
 ## Pendientes en orden recomendado
 - [x] Construir `admin/formulario-mascota.php`: nombre, especie, edad detallada (años y meses) y dueño desde BD.
@@ -34,6 +35,7 @@ El sistema cuenta con todas sus pantallas públicas (`index.php`, `contacto.php`
 - [x] Implementar acceso (`login.php`), registro (`registro.php`), cierre (`logout.php`) y sesiones estrictas por rol (`includes/sesion.php`).
 - [x] Conectar las pantallas del cliente (`cliente/panel.php`, `cliente/mis-mascotas.php`, `cliente/perfil.php`) y `cambiar-contrasena.php` con MySQL.
 - [x] Implementar Modo Oscuro, identidad por módulos, Toasts, estados vacíos ilustrados, `contacto.php` y auditoría de seguridad/QA.
+- [x] Implementar bandeja administrativa de mensajes (`admin/mensajes.php`) con buscador instantáneo y redirección directa al compositor web de Gmail.
 - [ ] Implementar recuperación con enlace temporal y envío de correo si se mantiene esa ampliación.
 - [ ] Preparar diagrama ER, capturas, instalación desde cero y documento final para el profesor.
 

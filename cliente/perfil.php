@@ -1,4 +1,15 @@
 <?php
+/**
+ * Controlador de consulta y edición del perfil personal del cliente.
+ *
+ * Obtiene los datos de la cuenta directamente desde $_SESSION['usuario_id']
+ * (sin utilizar usuarios por defecto) y procesa la actualización de nombre
+ * y correo electrónico mediante método POST.
+ *
+ * @package RegistroMascotas\Cliente
+ */
+
+/* Exige sesión activa con rol 'cliente' */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('cliente', '../login.php');
 
@@ -8,11 +19,15 @@ $clienteId     = (int) $_SESSION['usuario_id'];
 $nombreCliente = trim((string) $_SESSION['usuario_nombre']);
 $correoCliente = trim((string) $_SESSION['usuario_correo']);
 $inicialAvatar = mb_strtoupper(mb_substr($nombreCliente, 0, 1));
-$avisoEdicion  = 'La edición estará disponible cuando conectemos el sistema a la base de datos.';
+$avisoEdicion  = '';
 $tipoToast     = '';
 
 if ($pdo) {
     try {
+        /*
+         * Recupera los datos actuales del cliente desde MySQL verificando que siga 'Activo'.
+         * Si el registro no existe o fue desactivado, destruye la sesión de inmediato.
+         */
         $stmtCliente = $pdo->prepare(
             "SELECT id, nombre, correo FROM usuarios WHERE id = :id AND rol = :rol AND estado = :estado LIMIT 1"
         );
@@ -32,6 +47,10 @@ if ($pdo) {
         $correoCliente = trim((string) $clienteActual['correo']);
         $inicialAvatar = mb_strtoupper(mb_substr($nombreCliente, 0, 1));
 
+        /*
+         * Procesamiento POST de edición de perfil:
+         * Valida que el nombre no esté vacío y que el correo tenga formato válido.
+         */
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nuevoNombre  = trim((string) ($_POST['nombre'] ?? ''));
             $nuevoCorreo  = trim((string) ($_POST['correo'] ?? ''));
@@ -44,6 +63,10 @@ if ($pdo) {
                 $avisoEdicion = 'Ingresa un correo electrónico válido.';
                 $tipoToast    = 'error';
             } else {
+                /*
+                 * Comprueba que el nuevo correo electrónico no esté registrado en otra cuenta
+                 * (id != :id) antes de ejecutar el UPDATE y actualizar las variables de $_SESSION.
+                 */
                 $stmtDuplicado = $pdo->prepare(
                     "SELECT id FROM usuarios WHERE correo = :correo AND id != :id LIMIT 1"
                 );
@@ -94,13 +117,8 @@ if ($pdo) {
 
     <title>Mi perfil | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
@@ -140,6 +158,10 @@ if ($pdo) {
                 <a href="perfil.php" class="activo" aria-current="page">
                     <span aria-hidden="true">👤</span>
                     Mi perfil
+                </a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 
@@ -245,9 +267,6 @@ if ($pdo) {
         </a>
     </section>
 
-    <p class="aviso-demostracion">
-        Vista de práctica con datos de ejemplo.
-    </p>
 </main>
     </div>
 </body>

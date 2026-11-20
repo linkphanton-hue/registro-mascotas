@@ -1,3 +1,10 @@
+/**
+ * Animación decorativa de recorridos de huellas en las pantallas de acceso.
+ *
+ * Genera pisadas SVG en ángulos aleatorios y respeta la preferencia de
+ * accesibilidad prefers-reduced-motion del sistema operativo.
+ */
+
 const capaHuellas = document.getElementById("huellas");
 const movimientoReducido = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
@@ -26,6 +33,12 @@ const dibujoHuella = `
 
 let recorrido = null;
 
+/**
+ * Define el punto de partida (coordenadas X/Y), el ángulo de avance en radianes
+ * y la cantidad total de pasos (entre 10 y 18) para un nuevo recorrido.
+ *
+ * @returns {void}
+ */
 /* Comienza un recorrido desde un punto aleatorio de la pantalla. */
 function iniciarRecorrido() {
     const angulo = Math.random() * Math.PI * 2;
@@ -39,6 +52,13 @@ function iniciarRecorrido() {
     };
 }
 
+/**
+ * Calcula la posición y rotación del siguiente paso alternando entre huella
+ * izquierda y derecha, inserta el nodo en #huellas y lo elimina automáticamente
+ * al concluir su animación CSS (animationend) para no saturar el DOM.
+ *
+ * @returns {void}
+ */
 /* Crea una pisada alternando el lado izquierdo y el derecho. */
 function crearPaso() {
     if (
