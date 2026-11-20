@@ -97,13 +97,8 @@ if ($pdo) {
 
     <title>Panel de administración | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
@@ -149,6 +144,10 @@ if ($pdo) {
                 <a href="mensajes.php">
                     <span aria-hidden="true">✉️</span>
                     Mensajes
+                </a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 
@@ -272,7 +271,7 @@ if ($pdo) {
                 >
                     <table class="tabla-admin">
                         <caption class="solo-lectores">
-                            Resumen de mascotas con datos de ejemplo
+                            Resumen de mascotas
                         </caption>
 
                         <thead>
@@ -315,9 +314,6 @@ if ($pdo) {
                 </div>
             </section>
 
-            <p class="aviso-demostracion">
-                Vista de práctica con datos de ejemplo.
-            </p>
         </main>
     </div>
 </body>

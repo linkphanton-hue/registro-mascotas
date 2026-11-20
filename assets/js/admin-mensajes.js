@@ -27,21 +27,6 @@ const botonCerrarPie = document.getElementById("modal-cerrar-pie");
 let ultimoBotonActivo = null;
 
 /**
- * Descompone acentos con normalización Unicode NFD y elimina marcas diacríticas
- * (U+0300–U+036F) para garantizar coincidencias insensibles a tildes y mayúsculas.
- *
- * @param {string} texto Cadena original ingresada por el usuario o extraída del DOM.
- * @returns {string} Texto normalizado en minúsculas y sin acentos.
- */
-function normalizarTexto(texto) {
-    return texto
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
-}
-
-/**
  * Compara el término buscado contra remitente, correo, asunto y el cuerpo oculto
  * en `data-mensaje` del botón lector, alternando `fila.hidden` sin alterar el DOM.
  *

@@ -2,3 +2,7 @@
 includes/config.php
 .env
 
+
+includes/config-correo.php
+
+/vendor/

@@ -110,13 +110,8 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
 
     <title>Mascotas | Administración | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
@@ -165,6 +160,10 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
                 <a href="mensajes.php">
                     <span aria-hidden="true">✉️</span>
                     Mensajes
+                </a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 
@@ -226,7 +225,7 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
         >
             <table class="tabla-admin">
                 <caption class="solo-lectores">
-                    Mascotas registradas con datos de ejemplo
+                    Mascotas registradas
                 </caption>
 
                 <thead>
@@ -262,7 +261,7 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
                                         type="button"
                                         class="accion-tabla accion-editar"
                                         aria-label="Editar a <?= htmlspecialchars($mascota['nombre'], ENT_QUOTES, 'UTF-8') ?>"
-                                        onclick="window.location.href='formulario-mascota.php?id=<?= (int) $mascota['id'] ?>'"
+                                        data-destino="formulario-mascota.php?id=<?= (int) $mascota['id'] ?>"
                                     >
                                         Editar
                                     </button>
@@ -312,10 +311,6 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
         <?php endforeach; ?>
     </section>
 
-    <p class="aviso-demostracion">
-        Datos de ejemplo. Las acciones de editar y eliminar
-        todavía no están habilitadas.
-    </p>
 </main>
     </div>
 </body>

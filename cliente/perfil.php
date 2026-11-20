@@ -19,7 +19,7 @@ $clienteId     = (int) $_SESSION['usuario_id'];
 $nombreCliente = trim((string) $_SESSION['usuario_nombre']);
 $correoCliente = trim((string) $_SESSION['usuario_correo']);
 $inicialAvatar = mb_strtoupper(mb_substr($nombreCliente, 0, 1));
-$avisoEdicion  = 'La edición estará disponible cuando conectemos el sistema a la base de datos.';
+$avisoEdicion  = '';
 $tipoToast     = '';
 
 if ($pdo) {
@@ -117,13 +117,8 @@ if ($pdo) {
 
     <title>Mi perfil | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
@@ -163,6 +158,10 @@ if ($pdo) {
                 <a href="perfil.php" class="activo" aria-current="page">
                     <span aria-hidden="true">👤</span>
                     Mi perfil
+                </a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 
@@ -268,9 +267,6 @@ if ($pdo) {
         </a>
     </section>
 
-    <p class="aviso-demostracion">
-        Vista de práctica con datos de ejemplo.
-    </p>
 </main>
     </div>
 </body>

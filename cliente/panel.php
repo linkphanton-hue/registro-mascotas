@@ -83,19 +83,16 @@ $totalMascotas = count($mascotas);
 
     <title>Mi panel | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="../assets/css/panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/panel.css') ?>">
     <link rel="stylesheet" href="../assets/css/cliente-mascotas.css?v=<?= filemtime(__DIR__ . '/../assets/css/cliente-mascotas.css') ?>">
     <link rel="stylesheet" href="../assets/css/tema.css?v=<?= filemtime(__DIR__ . '/../assets/css/tema.css') ?>">
+    <link rel="stylesheet" href="../assets/css/admin.css?v=<?= filemtime(__DIR__ . '/../assets/css/admin.css') ?>">
+    <link rel="stylesheet" href="../assets/css/notificaciones-citas.css?v=<?= filemtime(__DIR__ . '/../assets/css/notificaciones-citas.css') ?>">
     <script src="../assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/../assets/js/interfaz.js') ?>" defer></script>
 </head>
 
@@ -129,6 +126,10 @@ $totalMascotas = count($mascotas);
                     <span aria-hidden="true">👤</span>
                     Mi perfil
                 </a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
+                </a>
             </nav>
 
             <a href="../index.php" class="volver-inicio">
@@ -157,6 +158,8 @@ $totalMascotas = count($mascotas);
                     </div>
                 </div>
             </header>
+
+            <?php require __DIR__ . '/../includes/avisos-citas.php'; ?>
 
             <!-- Presentación del panel. -->
             <section class="bienvenida" aria-labelledby="titulo-bienvenida">
@@ -251,7 +254,6 @@ $totalMascotas = count($mascotas);
                 <?php endif; ?>
             </section>
 
-            <p class="aviso-demostracion">Vista de práctica con datos de ejemplo.</p>
         </main>
     </div>
 </body>

@@ -89,13 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <title>Contacto | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/assets/js/tema-inicial.js') ?>"></script>
 
     <link rel="stylesheet" href="assets/css/inicio.css?v=<?= filemtime(__DIR__ . '/assets/css/inicio.css') ?>">
     <link rel="stylesheet" href="assets/css/admin.css?v=<?= filemtime(__DIR__ . '/assets/css/admin.css') ?>">
@@ -138,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         Escríbenos y nuestro equipo te responderá a la brevedad.
                     </p>
 
-                    <div class="rejilla" style="grid-template-columns: 1fr;">
+                    <div class="rejilla rejilla-contacto">
                         <article class="tarjeta">
                             <h3>📍 Atención presencial</h3>
                             <p>Av. Principal Veterinaria #124. Lunes a sábado de 8:00 a 19:00 h.</p>

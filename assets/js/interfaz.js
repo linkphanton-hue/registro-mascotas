@@ -6,6 +6,19 @@
 
 document.documentElement.classList.add("js-activo");
 
+/**
+ * Normaliza el texto de los buscadores quitando acentos, mayúsculas y espacios extremos.
+ * @param {string} texto Texto que se comparará en los filtros.
+ * @returns {string} Texto normalizado.
+ */
+function normalizarTexto(texto) {
+    return texto
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+}
+
 const CLAVE_TEMA = "tema-preferido";
 
 /**
@@ -265,3 +278,11 @@ if (parametrosUrl.get("eliminado") === "1") {
     const nuevaUrl = window.location.pathname + (nuevaQuery ? `?${nuevaQuery}` : "");
     window.history.replaceState({}, "", nuevaUrl);
 }
+
+
+// Los botones de edición declaran su destino en el HTML mediante data-destino.
+document.querySelectorAll('button[data-destino]').forEach((boton) => {
+    boton.addEventListener('click', () => {
+        window.location.href = boton.dataset.destino;
+    });
+});

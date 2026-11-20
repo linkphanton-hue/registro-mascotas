@@ -83,13 +83,8 @@ $textoContadorInicial = 'Mostrando ' . $totalMensajes . ' ' . ($totalMensajes ==
 
     <title>Mensajes | Administración | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Hojas base compartidas seguidas por la hoja exclusiva del módulo y tema.css -->
     <link rel="stylesheet" href="../assets/css/panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/panel.css') ?>">
@@ -130,6 +125,10 @@ $textoContadorInicial = 'Mostrando ' . $totalMensajes . ' ' . ($totalMensajes ==
                 <a href="mensajes.php" class="activo" aria-current="page">
                     <span aria-hidden="true">✉️</span>
                     Mensajes
+                </a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 

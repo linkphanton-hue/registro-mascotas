@@ -17,26 +17,6 @@ const resultadoClientes = document.getElementById(
 const clientesVacio = document.getElementById("clientes-vacio");
 
 /**
- * Normaliza un texto descomponiendo los caracteres acentuados en su forma
- * canónica Unicode (NFD), eliminando las marcas diacríticas (rango U+0300–U+036F)
- * y convirtiendo el resultado a minúsculas.
- *
- * @param {string} texto Cadena original con posibles tildes o mayúsculas.
- * @returns {string} Cadena limpia lista para comparación insensible a acentos.
- */
-/*
-    Convierte el texto a minúsculas y elimina acentos.
-    Así, escribir "perez" también encuentra "Pérez".
-*/
-function normalizarTexto(texto) {
-    return texto
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
-}
-
-/**
  * Compara el término buscado contra el nombre y correo normalizados de cada fila,
  * alterna la visibilidad (fila.hidden) y actualiza el contador y el estado vacío.
  *

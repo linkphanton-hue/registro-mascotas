@@ -259,13 +259,8 @@ $textoBoton   = $modoEdicion ? 'Guardar cambios' : 'Registrar mascota';
 
     <title><?= htmlspecialchars($tituloPagina, ENT_QUOTES, 'UTF-8') ?> | Administración | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Reutiliza el diseño general de los paneles. -->
     <link rel="stylesheet" href="../assets/css/panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/panel.css') ?>">
@@ -309,6 +304,10 @@ $textoBoton   = $modoEdicion ? 'Guardar cambios' : 'Registrar mascota';
                 <a href="mensajes.php">
                     <span aria-hidden="true">✉️</span>
                     Mensajes
+                </a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 
