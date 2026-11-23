@@ -1,4 +1,17 @@
 <?php
+/**
+ * Panel principal de administración (Dashboard).
+ *
+ * Calcula en tiempo real los indicadores operativos de la clínica (mascotas activas,
+ * clientes activos y total de especies) y muestra las últimas 10 mascotas registradas.
+ *
+ * @package RegistroMascotas\Admin
+ */
+
+/*
+ * Seguridad de acceso: exige sesión activa con rol 'admin'.
+ * Si el usuario no está autenticado o tiene rol 'cliente', redirige a login.php.
+ */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('admin', '../login.php');
 
@@ -8,8 +21,10 @@ require_once __DIR__ . '/../includes/formato.php';
 $totalMascotas = 0;
 $totalClientes = 0;
 $totalEspecies = 0;
+$totalMensajes = 0;
 $mascotasRecientes = [];
 
+/* Diccionario para traducir las claves internas de especie a etiquetas legibles en la tabla */
 $etiquetasEspecie = [
     'perro'  => 'Perro',
     'gato'   => 'Gato',
@@ -20,11 +35,16 @@ $etiquetasEspecie = [
 
 if ($pdo) {
     try {
+        /*
+         * Consulta de métricas: agrupa los tres conteos en una sola sentencia preparada
+         * mediante subconsultas escalares para reducir viajes a la base de datos.
+         */
         $stmtMetricas = $pdo->prepare(
             "SELECT
                 (SELECT COUNT(*) FROM mascotas WHERE estado = :est_m1) AS total_mascotas,
                 (SELECT COUNT(*) FROM usuarios WHERE rol = :rol_c AND estado = :est_u1) AS total_clientes,
-                (SELECT COUNT(DISTINCT especie) FROM mascotas WHERE estado = :est_m2) AS total_especies"
+                (SELECT COUNT(DISTINCT especie) FROM mascotas WHERE estado = :est_m2) AS total_especies,
+                (SELECT COUNT(*) FROM mensajes_contacto) AS total_mensajes"
         );
         $stmtMetricas->execute([
             ':est_m1' => 'Activo',
@@ -38,8 +58,13 @@ if ($pdo) {
             $totalMascotas = (int) $metricas['total_mascotas'];
             $totalClientes = (int) $metricas['total_clientes'];
             $totalEspecies = (int) $metricas['total_especies'];
+            $totalMensajes = (int) $metricas['total_mensajes'];
         }
 
+        /*
+         * Consulta de registros recientes: vincula mascotas con usuarios mediante INNER JOIN
+         * filtrando ambos en estado 'Activo' y ordenando de forma descendente (LIMIT 10).
+         */
         $stmtRecientes = $pdo->prepare(
             "SELECT
                 mascotas.nombre,
@@ -72,13 +97,8 @@ if ($pdo) {
 
     <title>Panel de administración | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
@@ -119,6 +139,16 @@ if ($pdo) {
                 <a href="clientes.php">
                     <span aria-hidden="true">👥</span>
                     Clientes
+                </a>
+
+                <a href="mensajes.php">
+                    <span aria-hidden="true">✉️</span>
+                    Mensajes
+                </a>
+                <a href="servicios.php">Servicios</a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 
@@ -218,6 +248,13 @@ if ($pdo) {
                         <p>Consultar los datos de los dueños.</p>
                         <span class="acceso-enlace">Ver clientes →</span>
                     </a>
+
+                    <a href="mensajes.php" class="acceso-admin">
+                        <span class="acceso-icono" aria-hidden="true">✉️</span>
+                        <h3>Mensajes de contacto</h3>
+                        <p>Consultar <?= $totalMensajes ?> <?= $totalMensajes === 1 ? 'mensaje recibido' : 'mensajes recibidos' ?> y responder por Gmail.</p>
+                        <span class="acceso-enlace">Ver mensajes →</span>
+                    </a>
                 </div>
             </section>
 
@@ -235,7 +272,7 @@ if ($pdo) {
                 >
                     <table class="tabla-admin">
                         <caption class="solo-lectores">
-                            Resumen de mascotas con datos de ejemplo
+                            Resumen de mascotas
                         </caption>
 
                         <thead>
@@ -278,9 +315,6 @@ if ($pdo) {
                 </div>
             </section>
 
-            <p class="aviso-demostracion">
-                Vista de práctica con datos de ejemplo.
-            </p>
         </main>
     </div>
 </body>

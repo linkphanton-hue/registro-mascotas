@@ -1,4 +1,14 @@
 <?php
+/**
+ * Controlador del listado administrativo de clientes.
+ *
+ * Consulta todos los usuarios con rol 'cliente' y calcula cuántas
+ * mascotas activas tiene registrado cada dueño para mostrarlo en la tabla.
+ *
+ * @package RegistroMascotas\Admin
+ */
+
+/* Exige sesión activa con rol 'admin'; redirige a login.php si no cumple */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('admin', '../login.php');
 
@@ -6,30 +16,69 @@ require_once __DIR__ . '/../includes/conexion.php';
 
 $clientes = [];
 $errorListado = '';
+$errorEstado = '';
+$csrfEstado = $_SESSION['csrf_estado_cliente'] ??= bin2hex(random_bytes(32));
+$avisoEstado = $_SESSION['aviso_estado_cliente'] ?? '';
+unset($_SESSION['aviso_estado_cliente']);
 
 if (!$pdo) {
     $errorListado = $errorConexion ?? 'No se pudo conectar con la base de datos para consultar los clientes.';
 } else {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $token = $_POST['csrf'] ?? '';
+        $clienteId = filter_var($_POST['cliente_id'] ?? null, FILTER_VALIDATE_INT);
+        $accion = $_POST['accion'] ?? '';
+        if (!is_string($token) || !hash_equals($csrfEstado, $token) || !$clienteId || $clienteId < 1
+            || !in_array($accion, ['desactivar', 'reactivar'], true)) {
+            $errorEstado = 'No se pudo validar el cambio de estado.';
+        } else {
+            $desactivar = $accion === 'desactivar';
+            try {
+                $actualizar = $pdo->prepare(
+                    "UPDATE usuarios SET estado = :nuevo WHERE id = :id AND rol = 'cliente' AND estado = :actual"
+                );
+                $actualizar->execute([
+                    ':id' => $clienteId,
+                    ':nuevo' => $desactivar ? 'Inactivo' : 'Activo',
+                    ':actual' => $desactivar ? 'Activo' : 'Inactivo',
+                ]);
+                if ($actualizar->rowCount() === 1) {
+                    $_SESSION['aviso_estado_cliente'] = $desactivar ? 'Cuenta desactivada.' : 'Cuenta reactivada.';
+                    header('Location: clientes.php', true, 303);
+                    exit;
+                }
+                $errorEstado = 'La cuenta ya cambió de estado o no está disponible.';
+            } catch (PDOException $e) {
+                error_log('Error al cambiar el estado del cliente: ' . $e->getMessage());
+                $errorEstado = 'No se pudo cambiar el estado de la cuenta.';
+            }
+        }
+    }
+
     try {
+        /*
+         * Consulta preparada con LEFT JOIN y GROUP BY:
+         * Se utiliza LEFT JOIN (con la condición mascotas.estado = 'Activo' en el ON)
+         * para incluir también a los clientes que aún tienen 0 mascotas registradas.
+         */
         $sql = "SELECT
                     usuarios.id,
                     usuarios.nombre,
                     usuarios.correo,
+                    usuarios.estado,
                     COUNT(mascotas.id) AS total_mascotas
                 FROM usuarios
                 LEFT JOIN mascotas
                     ON mascotas.usuario_id = usuarios.id
                    AND mascotas.estado = :estado_mascota
                 WHERE usuarios.rol = :rol
-                  AND usuarios.estado = :estado_usuario
-                GROUP BY usuarios.id, usuarios.nombre, usuarios.correo
+                GROUP BY usuarios.id, usuarios.nombre, usuarios.correo, usuarios.estado
                 ORDER BY usuarios.id ASC";
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             ':estado_mascota' => 'Activo',
             ':rol'            => 'cliente',
-            ':estado_usuario' => 'Activo',
         ]);
         $clientes = $stmt->fetchAll();
     } catch (PDOException $e) {
@@ -49,13 +98,8 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
 
     <title>Clientes | Administración | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
@@ -99,6 +143,16 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
                     <span aria-hidden="true">👥</span>
                     Clientes
                 </a>
+
+                <a href="mensajes.php">
+                    <span aria-hidden="true">✉️</span>
+                    Mensajes
+                </a>
+                <a href="servicios.php">Servicios</a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
+                </a>
             </nav>
 
             <a href="../index.php" class="volver-inicio">
@@ -123,10 +177,15 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
     </header>
 
     <p class="descripcion-listado">
-        Consulta los datos de los dueños de las mascotas.
+        Administra el acceso de los clientes y consulta sus mascotas registradas.
     </p>
 
-    <!-- JavaScript utiliza este campo para filtrar la tabla. -->
+    <?php if ($avisoEstado !== ''): ?>
+        <p role="status"><?= htmlspecialchars($avisoEstado, ENT_QUOTES, 'UTF-8') ?></p>
+    <?php endif; ?>
+    <?php if ($errorEstado !== ''): ?>
+        <p role="alert"><?= htmlspecialchars($errorEstado, ENT_QUOTES, 'UTF-8') ?></p>
+    <?php endif; ?>
     <div class="barra-filtros">
         <div class="grupo-filtro">
             <label for="buscar-cliente">
@@ -139,6 +198,15 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
                 placeholder="Escribe un nombre o correo"
                 aria-controls="tabla-clientes"
             >
+        </div>
+
+        <div class="grupo-filtro">
+            <label for="filtrar-estado-cliente">Estado de cuenta</label>
+            <select id="filtrar-estado-cliente" aria-controls="tabla-clientes">
+                <option value="">Todas las cuentas</option>
+                <option value="Activo">Activas</option>
+                <option value="Inactivo">Inactivas</option>
+            </select>
         </div>
 
         <p id="resultado-clientes" role="status">
@@ -159,7 +227,7 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
         >
             <table id="tabla-clientes" class="tabla-admin">
                 <caption class="solo-lectores">
-                    Clientes registrados con datos de ejemplo
+                    Clientes registrados
                 </caption>
 
                 <thead>
@@ -167,6 +235,7 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
                         <th scope="col">Nombre completo</th>
                         <th scope="col">Correo electrónico</th>
                         <th scope="col">Mascotas</th>
+                        <th scope="col">Estado</th>
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
@@ -176,7 +245,8 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
                         data-cliente identifica las filas que se pueden buscar.
                     -->
                     <?php foreach ($clientes as $cliente): ?>
-                        <tr data-cliente>
+                        <?php $activo = $cliente['estado'] === 'Activo'; ?>
+                        <tr data-cliente data-estado="<?= $activo ? 'Activo' : 'Inactivo' ?>">
                             <th scope="row" class="cliente-nombre">
                                 <?= htmlspecialchars($cliente['nombre'], ENT_QUOTES, 'UTF-8') ?>
                             </th>
@@ -186,24 +256,30 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
                             </td>
 
                             <td><?= (int) $cliente['total_mascotas'] ?></td>
+                            <td><?= $activo ? 'Activo' : 'Inactivo' ?></td>
 
                             <td>
                                 <div class="acciones-tabla">
-                                    <button
-                                        type="button"
-                                        class="accion-tabla accion-editar"
-                                        aria-label="Editar a <?= htmlspecialchars($cliente['nombre'], ENT_QUOTES, 'UTF-8') ?>"
-                                        onclick="window.location.href='formulario-cliente.php?id=<?= (int) $cliente['id'] ?>'"
-                                    >
-                                        Editar
-                                    </button>
+                                    <?php if ($activo): ?>
+                                        <a class="accion-tabla accion-editar" href="formulario-cliente.php?id=<?= (int) $cliente['id'] ?>"
+                                           aria-label="Editar a <?= htmlspecialchars($cliente['nombre'], ENT_QUOTES, 'UTF-8') ?>">Editar</a>
+                                    <?php endif; ?>
+                                    <form method="post" action="clientes.php">
+                                        <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrfEstado, ENT_QUOTES, 'UTF-8') ?>">
+                                        <input type="hidden" name="cliente_id" value="<?= (int) $cliente['id'] ?>">
+                                        <button type="submit" name="accion" value="<?= $activo ? 'desactivar' : 'reactivar' ?>"
+                                                class="accion-tabla <?= $activo ? 'accion-eliminar' : 'accion-editar' ?>"
+                                                <?php if ($activo): ?>data-confirmar="Pulsa de nuevo para bloquear el acceso de este cliente."<?php endif; ?>>
+                                            <?= $activo ? 'Desactivar' : 'Reactivar' ?>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
 
                     <tr id="clientes-vacio" <?= $totalClientes > 0 ? 'hidden' : '' ?>>
-                        <td colspan="4">
+                        <td colspan="5">
                             <div class="estado-vacio-ilustrado">
                                 <span class="estado-vacio-icono" aria-hidden="true">👥</span>
                                 <h3><?= $errorListado !== '' ? 'No se pudieron cargar los clientes' : 'Sin clientes para mostrar' ?></h3>
@@ -220,9 +296,6 @@ $textoContadorInicial = 'Mostrando ' . $totalClientes . ' ' . ($totalClientes ==
         </div>
     </section>
 
-    <p class="aviso-demostracion">
-        Datos de ejemplo. La edición todavía no está habilitada.
-    </p>
 </main>
     </div>
 </body>

@@ -1,4 +1,13 @@
 <?php
+/**
+ * Controlador y vista del formulario público de contacto.
+ *
+ * Recibe las consultas de los visitantes por método POST, valida el formato
+ * y longitud de cada campo y almacena el mensaje en la tabla mensajes_contacto.
+ *
+ * @package RegistroMascotas
+ */
+
 require_once __DIR__ . '/includes/conexion.php';
 
 $mensajeTexto = '';
@@ -11,6 +20,7 @@ $valores = [
     'mensaje' => '',
 ];
 
+/* Valida en servidor que nombre, correo, asunto y mensaje cumplan las reglas de longitud y formato */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre  = trim((string) ($_POST['nombre'] ?? ''));
     $correo  = trim((string) ($_POST['correo'] ?? ''));
@@ -43,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensajeTipo = 'error';
     } else {
         try {
+            /* Inserta el mensaje mediante consulta preparada (INSERT) y limpia los campos tras el éxito */
             $stmt = $pdo->prepare(
                 "INSERT INTO mensajes_contacto (nombre, correo, asunto, mensaje) VALUES (:nombre, :correo, :asunto, :mensaje)"
             );
@@ -78,13 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <title>Contacto | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/assets/js/tema-inicial.js') ?>"></script>
 
     <link rel="stylesheet" href="assets/css/inicio.css?v=<?= filemtime(__DIR__ . '/assets/css/inicio.css') ?>">
     <link rel="stylesheet" href="assets/css/admin.css?v=<?= filemtime(__DIR__ . '/assets/css/admin.css') ?>">
@@ -127,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         Escríbenos y nuestro equipo te responderá a la brevedad.
                     </p>
 
-                    <div class="rejilla" style="grid-template-columns: 1fr;">
+                    <div class="rejilla rejilla-contacto">
                         <article class="tarjeta">
                             <h3>📍 Atención presencial</h3>
                             <p>Av. Principal Veterinaria #124. Lunes a sábado de 8:00 a 19:00 h.</p>

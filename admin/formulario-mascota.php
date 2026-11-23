@@ -1,4 +1,15 @@
 <?php
+/**
+ * Controlador de alta (INSERT) y edición (UPDATE) de mascotas.
+ *
+ * Gestiona la carga de clientes activos para el selector de dueño, la hidratación
+ * de datos cuando se recibe un ID por GET y la validación de reglas de negocio
+ * antes de persistir en MySQL mediante consultas preparadas.
+ *
+ * @package RegistroMascotas\Admin
+ */
+
+/* Exige sesión activa con rol 'admin'; detiene y redirige a login.php si no cumple */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('admin', '../login.php');
 
@@ -8,6 +19,11 @@ $clientes = [];
 $mensajeTexto = '';
 $mensajeTipo = '';
 
+/*
+ * Determina el modo de operación:
+ * Si recibe un entero positivo en ?id= (o en POST), activa el modo de edición (UPDATE);
+ * de lo contrario, opera en modo de registro nuevo (INSERT).
+ */
 $mascotaId = filter_var($_GET['id'] ?? ($_POST['id'] ?? null), FILTER_VALIDATE_INT);
 $modoEdicion = ($mascotaId !== false && $mascotaId !== null && $mascotaId > 0);
 
@@ -32,6 +48,10 @@ if (!$pdo) {
     $mensajeTexto = $errorConexion ?? 'No se pudo conectar con la base de datos. No es posible cargar los clientes ni registrar mascotas.';
     $mensajeTipo = 'error';
 } else {
+    /*
+     * Consulta de clientes: recupera únicamente usuarios con rol 'cliente' y estado 'Activo'
+     * ordenados alfabéticamente para poblar el selector <select id="dueno">.
+     */
     try {
         $stmtClientes = $pdo->prepare(
             "SELECT id, nombre, correo FROM usuarios WHERE rol = :rol AND estado = :estado ORDER BY nombre ASC"
@@ -47,6 +67,10 @@ if (!$pdo) {
         $mensajeTipo = 'error';
     }
 
+    /*
+     * Precarga en modo edición (GET):
+     * Obtiene los datos actuales de la mascota siempre que siga 'Activo' en la base de datos.
+     */
     if ($modoEdicion && $_SERVER['REQUEST_METHOD'] !== 'POST' && $mensajeTipo !== 'error') {
         try {
             $stmtMascota = $pdo->prepare(
@@ -80,6 +104,11 @@ if (!$pdo) {
         }
     }
 
+    /*
+     * Procesamiento del formulario enviado por POST:
+     * Limpia espacios extremos, conserva los valores ingresados por si ocurre un error
+     * de validación y convierte años, meses e ID de dueño a enteros con filter_var().
+     */
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && $mensajeTipo !== 'error') {
         $nombre      = trim((string) ($_POST['nombre'] ?? ''));
         $especie     = strtolower(trim((string) ($_POST['especie'] ?? '')));
@@ -102,6 +131,11 @@ if (!$pdo) {
         $edadMeses = filter_var($mesesRaw, FILTER_VALIDATE_INT);
         $duenoId   = filter_var($duenoRaw, FILTER_VALIDATE_INT);
 
+        /*
+         * Validación Backend de reglas de negocio:
+         * Comprueba longitud de nombre y raza, membresía de especie en lista blanca ($especiesPermitidas),
+         * rango de años (0 a 100), rango de meses (0 a 11) e identificador válido de cliente.
+         */
         if ($nombre === '' || mb_strlen($nombre) > 100) {
             $mensajeTexto = 'Escribe un nombre válido para la mascota (máximo 100 caracteres, sin estar vacío).';
             $mensajeTipo = 'error';
@@ -122,7 +156,10 @@ if (!$pdo) {
             $mensajeTipo = 'error';
         } else {
             try {
-                // Verifica que el cliente exista en la BD, tenga rol cliente y esté Activo
+                /*
+                 * Integridad referencial: verifica en MySQL que el usuario_id seleccionado
+                 * realmente exista, tenga rol 'cliente' y se encuentre 'Activo'.
+                 */
                 $stmtVerificar = $pdo->prepare(
                     "SELECT id FROM usuarios WHERE id = :id AND rol = :rol AND estado = :estado LIMIT 1"
                 );
@@ -136,6 +173,10 @@ if (!$pdo) {
                     $mensajeTexto = 'El cliente seleccionado no existe o no se encuentra activo en la base de datos.';
                     $mensajeTipo = 'error';
                 } elseif ($modoEdicion) {
+                    /*
+                     * Modo edición: confirma que la mascota exista y esté 'Activo' antes de ejecutar
+                     * la sentencia UPDATE preparada con todos los campos actualizados.
+                     */
                     $stmtExisteMascota = $pdo->prepare(
                         "SELECT id FROM mascotas WHERE id = :id AND estado = :estado LIMIT 1"
                     );
@@ -168,6 +209,10 @@ if (!$pdo) {
                         $mensajeTipo = 'informacion';
                     }
                 } else {
+                    /*
+                     * Modo creación: inserta la nueva mascota mediante consulta preparada (INSERT)
+                     * con estado inicial 'Activo' y reinicia los campos del formulario.
+                     */
                     $stmtInsertar = $pdo->prepare(
                         "INSERT INTO mascotas (nombre, especie, raza, edad_anios, edad_meses, usuario_id, estado)
                          VALUES (:nombre, :especie, :raza, :edad_anios, :edad_meses, :usuario_id, :estado)"
@@ -214,13 +259,8 @@ $textoBoton   = $modoEdicion ? 'Guardar cambios' : 'Registrar mascota';
 
     <title><?= htmlspecialchars($tituloPagina, ENT_QUOTES, 'UTF-8') ?> | Administración | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Reutiliza el diseño general de los paneles. -->
     <link rel="stylesheet" href="../assets/css/panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/panel.css') ?>">
@@ -259,6 +299,16 @@ $textoBoton   = $modoEdicion ? 'Guardar cambios' : 'Registrar mascota';
                 <a href="clientes.php">
                     <span aria-hidden="true">👥</span>
                     Clientes
+                </a>
+
+                <a href="mensajes.php">
+                    <span aria-hidden="true">✉️</span>
+                    Mensajes
+                </a>
+                <a href="servicios.php">Servicios</a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 

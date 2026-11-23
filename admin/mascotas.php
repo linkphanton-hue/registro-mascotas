@@ -1,4 +1,14 @@
 <?php
+/**
+ * Controlador de listado general y baja lógica (Soft Delete) de mascotas.
+ *
+ * Presenta el catálogo completo de mascotas activas vinculadas con su dueño y
+ * procesa las solicitudes POST para desactivar registros sin eliminarlos físicamente.
+ *
+ * @package RegistroMascotas\Admin
+ */
+
+/* Protege la vista exigiendo sesión válida con rol 'admin' antes de ejecutar consultas */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('admin', '../login.php');
 
@@ -19,12 +29,17 @@ $etiquetasEspecie = [
 if (!$pdo) {
     $errorListado = $errorConexion ?? 'No se pudo conectar con la base de datos para consultar las mascotas.';
 } else {
-    // Borrado lógico (estado = 'Inactivo') mediante método POST
+    /*
+     * Borrado lógico (Soft Delete) por método POST:
+     * Actualiza la columna estado a 'Inactivo' en lugar de usar DELETE FROM, conservando
+     * la integridad referencial y el historial en la base de datos.
+     */
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['accion'] ?? '') === 'eliminar') {
         $eliminarId = filter_var($_POST['mascota_id'] ?? null, FILTER_VALIDATE_INT);
 
         if ($eliminarId !== false && $eliminarId !== null && $eliminarId > 0) {
             try {
+                /* Filtra por estado_actual = 'Activo' para asegurar que solo se desactiven registros vigentes */
                 $stmtEliminar = $pdo->prepare(
                     "UPDATE mascotas SET estado = :estado WHERE id = :id AND estado = :estado_actual"
                 );
@@ -34,6 +49,10 @@ if (!$pdo) {
                     ':estado_actual' => 'Activo',
                 ]);
 
+                /*
+                 * Si rowCount() confirma la actualización, aplica el patrón PRG (Post/Redirect/Get)
+                 * redirigiendo con ?eliminado=1 para disparar el Toast y evitar reenvíos al recargar.
+                 */
                 if ($stmtEliminar->rowCount() > 0) {
                     header('Location: mascotas.php?eliminado=1');
                     exit;
@@ -49,6 +68,10 @@ if (!$pdo) {
         }
     }
 
+    /*
+     * Consulta principal del catálogo: une mascotas y usuarios mediante INNER JOIN,
+     * recuperando únicamente registros donde tanto la mascota como el dueño estén 'Activo'.
+     */
     try {
         $sql = "SELECT
                     mascotas.id,
@@ -87,13 +110,8 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
 
     <title>Mascotas | Administración | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
@@ -137,6 +155,16 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
                 <a href="clientes.php">
                     <span aria-hidden="true">👥</span>
                     Clientes
+                </a>
+
+                <a href="mensajes.php">
+                    <span aria-hidden="true">✉️</span>
+                    Mensajes
+                </a>
+                <a href="servicios.php">Servicios</a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 
@@ -198,7 +226,7 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
         >
             <table class="tabla-admin">
                 <caption class="solo-lectores">
-                    Mascotas registradas con datos de ejemplo
+                    Mascotas registradas
                 </caption>
 
                 <thead>
@@ -234,7 +262,7 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
                                         type="button"
                                         class="accion-tabla accion-editar"
                                         aria-label="Editar a <?= htmlspecialchars($mascota['nombre'], ENT_QUOTES, 'UTF-8') ?>"
-                                        onclick="window.location.href='formulario-mascota.php?id=<?= (int) $mascota['id'] ?>'"
+                                        data-destino="formulario-mascota.php?id=<?= (int) $mascota['id'] ?>"
                                     >
                                         Editar
                                     </button>
@@ -284,10 +312,6 @@ $textoContadorInicial = 'Mostrando ' . $totalMascotas . ' ' . ($totalMascotas ==
         <?php endforeach; ?>
     </section>
 
-    <p class="aviso-demostracion">
-        Datos de ejemplo. Las acciones de editar y eliminar
-        todavía no están habilitadas.
-    </p>
 </main>
     </div>
 </body>

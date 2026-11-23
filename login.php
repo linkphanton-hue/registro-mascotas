@@ -1,14 +1,26 @@
 <?php
+/**
+ * Controlador de autenticación e inicio de sesión.
+ *
+ * Verifica las credenciales ingresadas contra la tabla usuarios de MySQL,
+ * valida la contraseña y redirige al panel
+ * correspondiente según el rol ('admin' o 'cliente').
+ *
+ * @package RegistroMascotas
+ */
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 require_once __DIR__ . '/includes/conexion.php';
+require_once __DIR__ . '/includes/contrasenas.php';
 
 $mensajeTexto = '';
 $mensajeTipo = '';
 $correoIngresado = '';
 
+/* Procesa el envío POST validando que ambos campos se hayan recibido y que exista conexión PDO */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $correoIngresado = trim((string) ($_POST['correo'] ?? ''));
     $contrasena      = (string) ($_POST['contrasena'] ?? '');
@@ -21,8 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensajeTipo = 'error';
     } else {
         try {
+            /* Busca el usuario por correo exigiendo que su estado sea 'Activo' */
             $stmt = $pdo->prepare(
-                "SELECT id, nombre, correo, contrasena, rol FROM usuarios WHERE correo = :correo AND estado = :estado LIMIT 1"
+                "SELECT id, nombre, correo, contrasena, contrasena_con_hash, rol FROM usuarios WHERE correo = :correo AND estado = :estado LIMIT 1"
             );
             $stmt->execute([
                 ':correo' => $correoIngresado,
@@ -30,7 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             $usuario = $stmt->fetch();
 
-            if ($usuario && password_verify($contrasena, $usuario['contrasena'])) {
+            /*
+             * Si la contraseña coincide, regenera el ID de sesión con
+             * session_regenerate_id(true) para prevenir ataques de fijación de sesión
+             * y redirige según el rol del usuario.
+             */
+            if ($usuario && verificarContrasena($contrasena, $usuario)) {
                 session_regenerate_id(true);
                 $_SESSION['usuario_id']     = (int) $usuario['id'];
                 $_SESSION['usuario_nombre'] = $usuario['nombre'];
@@ -62,14 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Iniciar sesión | Cuidado de tus Mascotas</title>
-
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->

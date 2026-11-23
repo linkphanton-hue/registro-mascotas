@@ -5,19 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Inicio | Cuidado de tus Mascotas</title>
-
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="assets/css/inicio.css?v=<?= filemtime(__DIR__ . '/assets/css/inicio.css') ?>">
     <link rel="stylesheet" href="assets/css/tema.css?v=<?= filemtime(__DIR__ . '/assets/css/tema.css') ?>">
+    <script src="assets/js/video-inicio.js?v=<?= filemtime(__DIR__ . '/assets/js/video-inicio.js') ?>" defer></script>
     <script src="assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/assets/js/interfaz.js') ?>" defer></script>
 </head>
 
@@ -35,6 +30,7 @@
 
             <div class="menu">
                 <a href="#servicios">Servicios</a>
+                <a href="#video">Video</a>
                 <a href="#nosotros">Nosotros</a>
                 <a href="contacto.php">Contacto</a>
                 <a href="login.php" class="boton boton-pequeno">
@@ -152,6 +148,23 @@
                             de las mascotas y sus dueños.
                         </p>
                     </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="video" class="seccion contenedor" aria-labelledby="titulo-video">
+            <div class="video-destacado">
+                <div class="video-destacado-texto">
+                    <h2 id="titulo-video">Conoce nuestro proyecto</h2>
+                    <p>Activa el sonido desde el reproductor para escuchar el video.</p>
+                </div>
+                <div class="video-destacado-marco">
+                    <video id="video-inicio" width="576" height="1024" controls muted playsinline preload="none"
+                           poster="assets/video/portada-video-inicio.jpg"
+                           aria-labelledby="titulo-video">
+                        <source src="assets/video/WhatsApp%20Video%202026-11-23%20at%201.10.36%20AM.mp4" type="video/mp4">
+                        <a href="assets/video/WhatsApp%20Video%202026-11-23%20at%201.10.36%20AM.mp4">Abrir el video</a>
+                    </video>
                 </div>
             </div>
         </section>

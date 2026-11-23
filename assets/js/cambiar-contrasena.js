@@ -1,3 +1,10 @@
+/**
+ * Control interactivo y validación en el navegador para cambiar-contrasena.php.
+ *
+ * Permite alternar la visibilidad de los campos de contraseña y valida que la
+ * clave nueva coincida con su confirmación y sea distinta de la clave actual.
+ */
+
 const formularioCambio = document.getElementById("formulario-cambio-contrasena");
 
 if (formularioCambio) {
@@ -7,6 +14,14 @@ if (formularioCambio) {
     const mostrar = document.getElementById("mostrar-contrasenas");
     const mensaje = document.getElementById("mensaje-contrasena");
 
+    /**
+     * Escribe el mensaje de validación en #mensaje-contrasena y actualiza su
+     * clase CSS para activar la notificación Toast correspondiente.
+     *
+     * @param {string} texto Mensaje descriptivo del estado o error.
+     * @param {"error"|"informacion"} tipo Clase semántica del aviso.
+     * @returns {void}
+     */
     function informarCambio(texto, tipo) {
         mensaje.textContent = texto;
         mensaje.className = `mensaje-formulario ${tipo}`;
@@ -23,6 +38,7 @@ if (formularioCambio) {
         mensaje.className = "mensaje-formulario";
     });
 
+    /* Verifica las reglas en el cliente antes de permitir que el formulario se envíe por POST */
     formularioCambio.addEventListener("submit", (evento) => {
         if (!formularioCambio.reportValidity()) {
             evento.preventDefault();

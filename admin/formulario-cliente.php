@@ -1,4 +1,14 @@
 <?php
+/**
+ * Controlador de alta (INSERT) y edición (UPDATE) de cuentas de cliente.
+ *
+ * Permite al administrador registrar nuevos dueños o actualizar sus datos
+ * personales y contraseña. El correo electrónico debe ser único.
+ *
+ * @package RegistroMascotas\Admin
+ */
+
+/* Exige sesión activa con rol 'admin' antes de procesar la vista */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('admin', '../login.php');
 
@@ -7,6 +17,10 @@ require_once __DIR__ . '/../includes/conexion.php';
 $mensajeTexto = '';
 $mensajeTipo = '';
 
+/*
+ * Determina si el formulario opera en modo edición (?id= entero positivo)
+ * o en modo de registro de un nuevo cliente.
+ */
 $clienteId = filter_var($_GET['id'] ?? ($_POST['id'] ?? null), FILTER_VALIDATE_INT);
 $modoEdicion = ($clienteId !== false && $clienteId !== null && $clienteId > 0);
 
@@ -19,6 +33,11 @@ if (!$pdo) {
     $mensajeTexto = $errorConexion ?? 'No se pudo conectar con la base de datos.';
     $mensajeTipo = 'error';
 } else {
+    /*
+     * Precarga en modo edición (GET):
+     * Consulta el nombre y correo actuales del cliente verificando que tenga
+     * rol 'cliente' y estado 'Activo' en la base de datos.
+     */
     if ($modoEdicion && $_SERVER['REQUEST_METHOD'] !== 'POST') {
         try {
             $stmtCargar = $pdo->prepare(
@@ -47,6 +66,11 @@ if (!$pdo) {
         }
     }
 
+    /*
+     * Procesamiento del formulario por método POST:
+     * Valida nombre, formato de correo electrónico, longitud mínima de contraseña (8 caracteres)
+     * y coincidencia entre la contraseña y su confirmación.
+     */
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nombre       = trim((string) ($_POST['nombre'] ?? ''));
         $correo       = trim((string) ($_POST['correo'] ?? ''));
@@ -64,18 +88,22 @@ if (!$pdo) {
         } elseif ($correoValido === false || mb_strlen($correo) > 254) {
             $mensajeTexto = 'Ingresa un correo electrónico con formato válido.';
             $mensajeTipo = 'error';
-        } elseif (!$modoEdicion && mb_strlen($contrasena) < 8) {
+        } elseif (!$modoEdicion && $contrasena === '') {
             $mensajeTexto = 'La contraseña debe tener al menos 8 caracteres.';
             $mensajeTipo = 'error';
-        } elseif ($modoEdicion && $contrasena !== '' && mb_strlen($contrasena) < 8) {
-            $mensajeTexto = 'Si deseas actualizar la contraseña, utiliza al menos 8 caracteres.';
+        } elseif ($contrasena !== '' && (mb_strlen($contrasena) < 8 || mb_strlen($contrasena) > 255)) {
+            $mensajeTexto = 'La contraseña debe tener entre 8 y 255 caracteres.';
             $mensajeTipo = 'error';
         } elseif ($contrasena !== $confirmacion) {
             $mensajeTexto = 'Las contraseñas no coinciden.';
             $mensajeTipo = 'error';
         } else {
             try {
-                // Verifica que el correo no esté registrado en otro usuario
+                /*
+                 * Verificación de correo único (UNIQUE):
+                 * Comprueba que el correo no esté asignado a otra cuenta en la tabla usuarios.
+                 * En modo edición se excluye el propio ID del cliente (AND id != :id).
+                 */
                 $sqlCorreo = "SELECT id FROM usuarios WHERE correo = :correo";
                 $paramCorreo = [':correo' => $correo];
 
@@ -104,15 +132,19 @@ if (!$pdo) {
                         $mensajeTexto = 'El cliente solicitado no existe o se encuentra inactivo.';
                         $mensajeTipo = 'error';
                     } else {
+                        /*
+                         * Actualización del cliente (UPDATE):
+                         * Si se proporcionó una nueva contraseña, la guarda en texto plano;
+                         * si se dejó en blanco, actualiza únicamente el nombre y el correo.
+                         */
                         if ($contrasena !== '') {
-                            $hash = password_hash($contrasena, PASSWORD_DEFAULT);
                             $stmtActualizar = $pdo->prepare(
-                                "UPDATE usuarios SET nombre = :nombre, correo = :correo, contrasena = :contrasena WHERE id = :id AND rol = :rol AND estado = :estado"
+                                "UPDATE usuarios SET nombre = :nombre, correo = :correo, contrasena = :contrasena, contrasena_con_hash = 0 WHERE id = :id AND rol = :rol AND estado = :estado"
                             );
                             $stmtActualizar->execute([
                                 ':nombre'     => $nombre,
                                 ':correo'     => $correo,
-                                ':contrasena' => $hash,
+                                ':contrasena' => $contrasena,
                                 ':id'         => $clienteId,
                                 ':rol'        => 'cliente',
                                 ':estado'     => 'Activo',
@@ -134,14 +166,17 @@ if (!$pdo) {
                         $mensajeTipo = 'informacion';
                     }
                 } else {
-                    $hash = password_hash($contrasena, PASSWORD_DEFAULT);
+                    /*
+                     * Creación de nuevo cliente (INSERT):
+                     * Guarda la contraseña inicial en texto plano y asigna rol 'cliente' y estado 'Activo'.
+                     */
                     $stmtInsertar = $pdo->prepare(
-                        "INSERT INTO usuarios (nombre, correo, contrasena, rol, estado) VALUES (:nombre, :correo, :contrasena, :rol, :estado)"
+                        "INSERT INTO usuarios (nombre, correo, contrasena, contrasena_con_hash, rol, estado) VALUES (:nombre, :correo, :contrasena, 0, :rol, :estado)"
                     );
                     $stmtInsertar->execute([
                         ':nombre'     => $nombre,
                         ':correo'     => $correo,
-                        ':contrasena' => $hash,
+                        ':contrasena' => $contrasena,
                         ':rol'        => 'cliente',
                         ':estado'     => 'Activo',
                     ]);
@@ -174,13 +209,8 @@ $textoBoton   = $modoEdicion ? 'Guardar cambios' : 'Registrar cliente';
 
     <title><?= htmlspecialchars($tituloPagina, ENT_QUOTES, 'UTF-8') ?> | Administración | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
@@ -223,6 +253,16 @@ $textoBoton   = $modoEdicion ? 'Guardar cambios' : 'Registrar cliente';
                 <a href="clientes.php" class="activo" aria-current="page">
                     <span aria-hidden="true">👥</span>
                     Clientes
+                </a>
+
+                <a href="mensajes.php">
+                    <span aria-hidden="true">✉️</span>
+                    Mensajes
+                </a>
+                <a href="servicios.php">Servicios</a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
                 </a>
             </nav>
 
@@ -354,9 +394,6 @@ $textoBoton   = $modoEdicion ? 'Guardar cambios' : 'Registrar cliente';
         </form>
     </section>
 
-    <p class="aviso-demostracion">
-        Formulario de práctica. Todavía no guarda cuentas.
-    </p>
 </main>
     </div>
 </body>

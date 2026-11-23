@@ -1,4 +1,14 @@
 <?php
+/**
+ * Panel principal del cliente autenticado (Mi Espacio).
+ *
+ * Muestra la bienvenida personalizada, el conteo de mascotas registradas a su
+ * nombre y las tarjetas de resumen consultadas mediante su ID de sesión.
+ *
+ * @package RegistroMascotas\Cliente
+ */
+
+/* Exige sesión activa con rol 'cliente'; impide el acceso sin autenticar o con otro rol */
 require_once __DIR__ . '/../includes/sesion.php';
 requerirRol('cliente', '../login.php');
 
@@ -22,6 +32,10 @@ $etiquetasEspecie = [
 
 if ($pdo) {
     try {
+        /*
+         * Verifica que la cuenta del cliente en $_SESSION['usuario_id'] siga 'Activo'
+         * en la base de datos; si fue desactivada, destruye la sesión y redirige a login.php.
+         */
         $stmtCliente = $pdo->prepare(
             "SELECT id, nombre FROM usuarios WHERE id = :id AND rol = :rol AND estado = :estado LIMIT 1"
         );
@@ -42,6 +56,10 @@ if ($pdo) {
         $partesNombre  = preg_split('/\s+/', $nombreCliente);
         $primerNombre  = $partesNombre[0] ?: $nombreCliente;
 
+        /*
+         * Protección anti-IDOR: filtra las mascotas exclusivamente por el :usuario_id
+         * extraído de la sesión activa, garantizando que cada cliente vea solo sus mascotas.
+         */
         $stmtMascotas = $pdo->prepare(
             "SELECT id, nombre, especie, raza, edad_anios, edad_meses FROM mascotas WHERE usuario_id = :usuario_id AND estado = :estado ORDER BY id ASC"
         );
@@ -65,19 +83,16 @@ $totalMascotas = count($mascotas);
 
     <title>Mi panel | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
     <link rel="stylesheet" href="../assets/css/panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/panel.css') ?>">
     <link rel="stylesheet" href="../assets/css/cliente-mascotas.css?v=<?= filemtime(__DIR__ . '/../assets/css/cliente-mascotas.css') ?>">
     <link rel="stylesheet" href="../assets/css/tema.css?v=<?= filemtime(__DIR__ . '/../assets/css/tema.css') ?>">
+    <link rel="stylesheet" href="../assets/css/admin.css?v=<?= filemtime(__DIR__ . '/../assets/css/admin.css') ?>">
+    <link rel="stylesheet" href="../assets/css/notificaciones-citas.css?v=<?= filemtime(__DIR__ . '/../assets/css/notificaciones-citas.css') ?>">
     <script src="../assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/../assets/js/interfaz.js') ?>" defer></script>
 </head>
 
@@ -111,6 +126,11 @@ $totalMascotas = count($mascotas);
                     <span aria-hidden="true">👤</span>
                     Mi perfil
                 </a>
+                <a href="servicios.php">Servicios</a>
+                <a href="citas.php">
+                    <span aria-hidden="true">📅</span>
+                    Citas
+                </a>
             </nav>
 
             <a href="../index.php" class="volver-inicio">
@@ -139,6 +159,8 @@ $totalMascotas = count($mascotas);
                     </div>
                 </div>
             </header>
+
+            <?php require __DIR__ . '/../includes/avisos-citas.php'; ?>
 
             <!-- Presentación del panel. -->
             <section class="bienvenida" aria-labelledby="titulo-bienvenida">
@@ -189,7 +211,7 @@ $totalMascotas = count($mascotas);
                     <div class="estado-vacio-ilustrado">
                         <span class="estado-vacio-icono" aria-hidden="true">🐾</span>
                         <h3>Aún no tienes mascotas registradas</h3>
-                        <p>Cuando la veterinaria asocie tus mascotas a tu cuenta, aparecerán aquí.</p>
+                        <a href="mis-mascotas.php#registrar-mascota">Registrar mi primera mascota</a>
                     </div>
                 <?php else: ?>
                     <div class="rejilla-mascotas">
@@ -233,7 +255,6 @@ $totalMascotas = count($mascotas);
                 <?php endif; ?>
             </section>
 
-            <p class="aviso-demostracion">Vista de práctica con datos de ejemplo.</p>
         </main>
     </div>
 </body>

@@ -1,4 +1,11 @@
+/**
+ * Búsqueda instantánea por nombre o correo en la tabla administrativa de clientes.
+ *
+ * Permite localizar clientes sin importar mayúsculas, minúsculas o tildes.
+ */
+
 const buscarCliente = document.getElementById("buscar-cliente");
+const filtrarEstadoCliente = document.getElementById("filtrar-estado-cliente");
 
 const filasClientes = document.querySelectorAll(
     "#tabla-clientes tbody tr[data-cliente]"
@@ -10,21 +17,16 @@ const resultadoClientes = document.getElementById(
 
 const clientesVacio = document.getElementById("clientes-vacio");
 
-/*
-    Convierte el texto a minúsculas y elimina acentos.
-    Así, escribir "perez" también encuentra "Pérez".
-*/
-function normalizarTexto(texto) {
-    return texto
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
-}
-
+/**
+ * Compara el término buscado contra el nombre y correo normalizados de cada fila,
+ * alterna la visibilidad (fila.hidden) y actualiza el contador y el estado vacío.
+ *
+ * @returns {void}
+ */
 /* Busca únicamente en el nombre y el correo de cada cliente. */
 function filtrarClientes() {
     const busqueda = normalizarTexto(buscarCliente.value);
+    const estado = filtrarEstadoCliente.value;
     let cantidad = 0;
 
     filasClientes.forEach((fila) => {
@@ -38,7 +40,7 @@ function filtrarClientes() {
             `${nombre} ${correo}`
         );
 
-        const coincide = textoCliente.includes(busqueda);
+        const coincide = textoCliente.includes(busqueda) && (!estado || fila.dataset.estado === estado);
 
         fila.hidden = !coincide;
 
@@ -55,7 +57,8 @@ function filtrarClientes() {
     clientesVacio.hidden = cantidad > 0;
 }
 
-if (buscarCliente && resultadoClientes && clientesVacio) {
+if (buscarCliente && filtrarEstadoCliente && resultadoClientes && clientesVacio) {
     buscarCliente.addEventListener("input", filtrarClientes);
+    filtrarEstadoCliente.addEventListener("change", filtrarClientes);
     filtrarClientes();
 }

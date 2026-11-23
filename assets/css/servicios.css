@@ -1,0 +1,25 @@
+.rejilla-servicios {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: 20px;
+}
+
+.tarjeta-servicio {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 12px;
+    justify-items: start;
+    padding: 24px;
+    border: 1px solid var(--color-borde);
+    border-radius: 16px;
+    background: var(--color-superficie);
+}
+
+.tarjeta-servicio h2,
+.tarjeta-servicio p {
+    margin: 0;
+}
+
+.tarjeta-servicio h2 {
+    font-size: 1.2rem;
+}

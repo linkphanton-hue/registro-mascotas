@@ -1,5 +1,16 @@
 <?php
+/**
+ * Controlador de cambio de contraseña para usuarios con sesión activa.
+ *
+ * Verifica la identidad del usuario comprobando su contraseña actual antes de guardar
+ * el nuevo valor en la base de práctica.
+ *
+ * @package RegistroMascotas
+ */
+
+/* Exige que exista una sesión autenticada antes de mostrar o procesar el formulario */
 require_once __DIR__ . '/includes/sesion.php';
+require_once __DIR__ . '/includes/contrasenas.php';
 requerirRol(null, 'login.php');
 
 require_once __DIR__ . '/includes/conexion.php';
@@ -7,6 +18,7 @@ require_once __DIR__ . '/includes/conexion.php';
 $mensajeTexto = '';
 $mensajeTipo = '';
 
+/* Valida que la nueva clave tenga al menos 8 caracteres, coincida con su confirmación y sea distinta de la actual */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $actual    = (string) ($_POST['contrasena_actual'] ?? '');
     $nueva     = (string) ($_POST['nueva_contrasena'] ?? '');
@@ -18,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($actual === '' || $nueva === '' || $confirmar === '') {
         $mensajeTexto = 'Completa todos los campos de contraseña.';
         $mensajeTipo = 'error';
-    } elseif (mb_strlen($nueva) < 8) {
-        $mensajeTexto = 'La nueva contraseña debe tener al menos 8 caracteres.';
+    } elseif (mb_strlen($nueva) < 8 || mb_strlen($nueva) > 255) {
+        $mensajeTexto = 'La nueva contraseña debe tener entre 8 y 255 caracteres.';
         $mensajeTipo = 'error';
     } elseif ($nueva !== $confirmar) {
         $mensajeTexto = 'La nueva contraseña y su confirmación no coinciden.';
@@ -29,8 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensajeTipo = 'error';
     } else {
         try {
+            /*
+             * Consulta la contraseña actual del usuario autenticado ($_SESSION['usuario_id']).
+             * Si se confirma la clave actual, guarda la nueva en texto plano.
+             */
             $stmtUsuario = $pdo->prepare(
-                "SELECT id, contrasena FROM usuarios WHERE id = :id AND estado = :estado LIMIT 1"
+                "SELECT id, contrasena, contrasena_con_hash FROM usuarios WHERE id = :id AND estado = :estado LIMIT 1"
             );
             $stmtUsuario->execute([
                 ':id'     => (int) $_SESSION['usuario_id'],
@@ -41,16 +57,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$usuario) {
                 destruirSesionYRedirigir('login.php');
-            } elseif (!password_verify($actual, $usuario['contrasena'])) {
+            } elseif (!verificarContrasena($actual, $usuario)) {
                 $mensajeTexto = 'La contraseña actual ingresada es incorrecta.';
                 $mensajeTipo = 'error';
             } else {
-                $nuevoHash = password_hash($nueva, PASSWORD_DEFAULT);
                 $stmtActualizar = $pdo->prepare(
-                    "UPDATE usuarios SET contrasena = :contrasena WHERE id = :id"
+                    "UPDATE usuarios SET contrasena = :contrasena, contrasena_con_hash = 0 WHERE id = :id"
                 );
                 $stmtActualizar->execute([
-                    ':contrasena' => $nuevoHash,
+                    ':contrasena' => $nueva,
                     ':id'         => (int) $usuario['id'],
                 ]);
 
@@ -73,13 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <title>Cambiar contraseña | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->

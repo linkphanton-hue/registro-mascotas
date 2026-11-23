@@ -1,4 +1,14 @@
 <?php
+/**
+ * Controlador de registro público de nuevos clientes.
+ *
+ * Valida los datos del formulario, comprueba que el correo no esté duplicado,
+ * almacena la cuenta con contraseña de práctica en texto plano e inicia la sesión
+ * automáticamente hacia el panel del cliente.
+ *
+ * @package RegistroMascotas
+ */
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -12,6 +22,7 @@ $valores = [
     'correo' => '',
 ];
 
+/* Recepción y validación en servidor de nombre, correo electrónico y contraseña (>= 8 caracteres) */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre       = trim((string) ($_POST['nombre'] ?? ''));
     $correo       = trim((string) ($_POST['correo'] ?? ''));
@@ -32,14 +43,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($correoValido === false || mb_strlen($correo) > 254) {
         $mensajeTexto = 'Ingresa un correo electrónico válido.';
         $mensajeTipo = 'error';
-    } elseif (mb_strlen($contrasena) < 8) {
-        $mensajeTexto = 'La contraseña debe tener al menos 8 caracteres.';
+    } elseif (mb_strlen($contrasena) < 8 || mb_strlen($contrasena) > 255) {
+        $mensajeTexto = 'La contraseña debe tener entre 8 y 255 caracteres.';
         $mensajeTipo = 'error';
     } elseif ($contrasena !== $confirmacion) {
         $mensajeTexto = 'Las contraseñas no coinciden.';
         $mensajeTipo = 'error';
     } else {
         try {
+            /* Verifica que el correo no exista en la tabla usuarios antes de insertar */
             $stmtVerificar = $pdo->prepare(
                 "SELECT id FROM usuarios WHERE correo = :correo LIMIT 1"
             );
@@ -49,18 +61,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensajeTexto = 'Ya existe una cuenta registrada con ese correo electrónico.';
                 $mensajeTipo = 'error';
             } else {
-                $hash = password_hash($contrasena, PASSWORD_DEFAULT);
                 $stmtInsertar = $pdo->prepare(
-                    "INSERT INTO usuarios (nombre, correo, contrasena, rol, estado) VALUES (:nombre, :correo, :contrasena, :rol, :estado)"
+                    "INSERT INTO usuarios (nombre, correo, contrasena, contrasena_con_hash, rol, estado) VALUES (:nombre, :correo, :contrasena, 0, :rol, :estado)"
                 );
                 $stmtInsertar->execute([
                     ':nombre'     => $nombre,
                     ':correo'     => $correo,
-                    ':contrasena' => $hash,
+                    ':contrasena' => $contrasena,
                     ':rol'        => 'cliente',
                     ':estado'     => 'Activo',
                 ]);
 
+                /*
+                 * Recupera el ID recién generado con lastInsertId(), regenera el ID de sesión
+                 * y redirige directamente al panel del cliente.
+                 */
                 $nuevoId = (int) $pdo->lastInsertId();
                 session_regenerate_id(true);
                 $_SESSION['usuario_id']     = $nuevoId;
@@ -87,13 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <title>Crear cuenta | Cuidado de tus Mascotas</title>
 
-    <script>
-        try {
-            if (localStorage.getItem('tema-preferido') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        } catch (e) {}
-    </script>
+    <!-- Carga el script para inicializar el tema -->
+    <script src="assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/assets/js/tema-inicial.js') ?>"></script>
 
     <!-- Primero los estilos compartidos; después los exclusivos de esta pantalla.
          filemtime solicita una versión nueva al guardar cada CSS. -->
