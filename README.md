@@ -216,11 +216,3 @@ En la carpeta [`docs/`](file:///c:/Antigravity%20Projects/Registro-mascotas/docs
 - 🎨 **[Organización de Estilos y Temas](file:///c:/Antigravity%20Projects/Registro-mascotas/docs/organizacion-estilos.md):** Documentación de variables CSS, colores por módulo, reglas del Modo Oscuro y componentes UI (Toasts, modales).
 - 📊 **[Estado del Proyecto](file:///c:/Antigravity%20Projects/Registro-mascotas/docs/estado-proyecto.md):** Resumen ejecutivo del avance y matriz de cumplimiento de requerimientos funcionales.
 
----
-
-## 👨‍💻 Autoría y Créditos
-
-- **Proyecto:** Registro de Mascotas — "Cuidado de tus Mascotas"
-- **Asignatura:** SOF-109
-- **Desarrollador:** David
-- **Fecha:** Noviembre de 2026
