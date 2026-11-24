@@ -2,7 +2,7 @@
 
 Asignatura: SOF-109  
 Proyecto: Registro de Mascotas  
-Última actualización: 9 de noviembre de 2026
+Última actualización: 23 de noviembre de 2026
 
 ## Planificación y estructura inicial
 
@@ -337,3 +337,48 @@ Preparé una imagen del mapa de relaciones. El manual explica cómo abrir el Dis
 Coloqué el video entre **Servicios** y **Nosotros** y añadí un enlace en el menú principal. Amplié el reproductor para aprovechar mejor el ancho de pantalla y conservé el encuadre vertical. Usé un fotograma del video como portada.
 
 Comprobé en Edge que el video se reproduce sin sonido al entrar en pantalla, se pausa al salir y espera una acción del visitante cuando está activada la preferencia de movimiento reducido. Probé el comportamiento con tamaños de escritorio y móvil.
+
+## 23 de noviembre de 2026 - Refactorización UI/UX del módulo de citas con ventana modal, nuevos estados y notificaciones en plataforma (David)
+
+### Mi objetivo
+Unificar la experiencia visual e interactiva del módulo de solicitudes de citas (`admin/citas.php` y `cliente/citas.php`) con el estándar de la bandeja de "Mensajes recibidos", eliminando por completo la lógica de envío de correos externos en citas, incorporando estados detallados (`Pendiente`, `Confirmada`, `Confirmada (Editada)`, `Rechazada`, `Cancelada`) y gestionando todas las acciones desde una ventana modal dinámica compatible con Modo Claro y Modo Oscuro.
+
+### Mi avance
+En `includes/citas.php` y `includes/notificaciones-citas.php` eliminé toda dependencia de envío por correo electrónico (PHPMailer, tarjeta de confirmaciones pendientes de correo y textos `"Correo: Pendiente"`), dejando la comunicación 100% dentro de la plataforma web. Amplié la columna `estado` de la tabla `citas` en MySQL (`db/import.sql` y `db/citas.sql`) para soportar los estados `Pendiente`, `Confirmada`, `Confirmada (Editada)`, `Cambio solicitado`, `Rechazada` y `Cancelada`, actualizando también `includes/horarios-citas.php` para que las citas editadas conserven reservado su turno en la agenda.
+
+Rediseñé las tablas de `admin/citas.php` y `cliente/citas.php` siguiendo la arquitectura de `admin/mensajes.php`: incorporé una barra de búsqueda instantánea (`.barra-filtros`) y dejé en la tabla únicamente las columnas resumidas (Mascota, Cliente, Servicio, Fecha/Horario, Estado y Acciones) sin scroll horizontal ni formularios incrustados en las celdas. Moví todos los detalles (disponibilidad preferida, motivo de consulta, motivo de cambio) y los controles operativos (asignar horario y **Confirmar**, **Guardar cambios / Editar**, **Mantener horario actual**, **Rechazar** y **Cancelar cita**) hacia la ventana modal `#modal-cita` en `assets/css/citas.css` y `assets/js/horarios-citas.js`, alimentada mediante atributos HTML5 `data-*`. Finalmente, actualicé `includes/avisos-citas.php` y `assets/js/interfaz.js` para eliminar el botón redundante `"Ver mis citas"` y disparar automáticamente una notificación flotante (Toast) junto a una alerta discreta cuando el cliente tiene novedades en sus citas.
+
+### Resultados registrados en la revisión
+- Columna `citas.estado` actualizada en MySQL con los nuevos estados `Confirmada (Editada)` y `Cancelada`.
+- Vistas `admin/citas.php` y `cliente/citas.php` verificadas con `php -l` y pruebas HTTP (`200 OK`), comprobando la tabla resumida sin textos de correo, el buscador instantáneo, la apertura del modal por `data-attributes` y las transiciones de estado.
+- Alertas del cliente verificadas sin el enlace redundante `"Ver mis citas"` y con emisión automática de Toast al detectar actualizaciones.
+
+### Lo que aprendí
+Trasladar los formularios de programación y reprogramación desde las celdas de una tabla hacia una ventana modal alimentada por `data-attributes` evita la saturación visual y el desbordamiento horizontal, mientras que manejar estados explícitos (`Confirmada (Editada)`, `Cancelada`, `Rechazada`) junto con notificaciones Toast dentro de la misma plataforma ofrece trazabilidad inmediata al cliente sin depender de servidores SMTP externos.
+
+## 23 de noviembre de 2026 - Edición libre y eliminación de citas, horario 24h, persistencia de sesión y accesibilidad visual (David)
+
+### Mi objetivo
+Garantizar la flexibilidad operativa en el módulo de citas permitiendo la edición completa y eliminación tanto al administrador como al cliente, estandarizar el formato horario exclusivamente en formato 24 horas en todo el sistema, asegurar la persistencia de las sesiones activas evitando que se cierren solas, e incorporar un botón de retorno al sitio en el formulario de acceso resolviendo los problemas de contraste y legibilidad en modo día.
+
+### Mi avance
+En `includes/citas.php` amplié las capacidades de gestión para que tanto el administrador como el cliente puedan modificar libremente los datos de sus citas registradas (servicio, mascota, fecha, turno horario y motivo) y eliminar citas obsoletas, pasadas o canceladas mediante un botón de eliminación directa y confirmación accesible (`modal-eliminar-cita` y formulario inline `form-eliminar-cita-inline`), actualizando los estilos en `assets/css/citas.css`.
+
+Estandaricé el manejo horario en todo el proyecto exclusivamente al formato de 24 horas (`HH:mm`), normalizando los intervalos de la agenda (`08:00 - 09:00`, `09:00 - 10:00`, etc.) en `includes/horarios-citas.php`, la visualización en `contacto.php` (`08:00 a 19:00`) y las validaciones de turnos para eliminar inconsistencias con formatos AM/PM.
+
+Para resolver los cierres automáticos de sesión mientras el usuario navega o mantiene abierta la página, configuré en `includes/sesion.php` una expiración de recolección de basura de 24 horas (`session.gc_maxlifetime = 86400`), vida de cookie de sesión vinculada al cierre del navegador (`session.cookie_lifetime = 0`) y un endpoint ligero de refresco (`?keepalive=1`). En `assets/js/interfaz.js` implementé un latido periódico (*heartbeat*) que emite una solicitud en segundo plano cada 5 minutos en los paneles autenticados, manteniendo viva la sesión hasta que el usuario cierre el navegador. Adicionalmente, agregué una redirección automática en `login.php` hacia el panel correspondiente si el usuario ya cuenta con una sesión iniciada.
+
+En `login.php` incorporé en la parte superior izquierda el botón con flecha `← Volver al sitio` con enlace directo a `index.php`. Para solucionar las tonalidades grisáceas que dificultaban la lectura en modo día (tema claro), ajusté en `assets/css/tema.css` las variables de color secundario y tenue (`--color-texto-secundario: #2d3a5e` y `--color-texto-tenue: #435074`), estableciendo contrastes nítidos y legibles tanto para textos explicativos, descripciones y badges como para el nuevo botón de retorno, garantizando una visualización clara y descansada al alternar entre modo claro y modo oscuro.
+
+### Resultados registrados en la revisión
+- Edición y eliminación de citas verificadas con éxito en los roles de administrador y cliente.
+- Formato de 24 horas verificado en todas las interfaces de agenda, citas y horarios de atención.
+- Persistencia de sesión comprobada mediante peticiones periódicas `?keepalive=1` (código `204 No Content`) y parámetros de sesión en PHP.
+- Botón `← Volver al sitio` integrado en `login.php` y contraste de texto comprobado con legibilidad óptima en Modo Claro y Modo Oscuro.
+
+### Lo que aprendí
+Configurar la persistencia de sesión combinando parámetros del servidor (`gc_maxlifetime`) con un *heartbeat* liviano en JavaScript previene la pérdida inesperada de trabajo mientras el usuario tiene la página abierta. Asimismo, unificar formatos a estándares internacionales (como las 24 horas) y calibrar las escalas de contraste según WCAG asegura que la interfaz sea cómoda, legible y profesional bajo cualquier modo de visualización.
+
+### Estado al cierre del día
+El sistema de Registro de Mascotas cuenta con un módulo de citas completamente refactorizado bajo estándares UI/UX modernos, libre de dependencias de correo, con gestión total de edición y eliminación, agenda en formato 24 horas, persistencia de sesión estable y contraste visual optimizado para todos los temas.
+

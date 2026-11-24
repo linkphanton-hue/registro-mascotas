@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="rejilla rejilla-contacto">
                         <article class="tarjeta">
                             <h3>📍 Atención presencial</h3>
-                            <p>Av. Principal Veterinaria #124. Lunes a sábado de 8:00 a 19:00 h.</p>
+                            <p>Av. Principal Veterinaria #124. Lunes a sábado de 08:00 a 19:00.</p>
                         </article>
 
                         <article class="tarjeta">

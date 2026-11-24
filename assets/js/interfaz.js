@@ -195,6 +195,11 @@ function observarMensajesExistentes() {
         mostrarToast(document.body.dataset.toastMensaje, tipoBody);
     }
 
+    const contenedorAvisosCitas = document.querySelector("[data-toast-aviso]");
+    if (contenedorAvisosCitas && contenedorAvisosCitas.dataset.toastAviso) {
+        mostrarToast(contenedorAvisosCitas.dataset.toastAviso, "exito");
+    }
+
     const selectores = ".mensaje-admin, .mensaje-formulario, #aviso-edicion[data-toast]";
     document.querySelectorAll(selectores).forEach((elemento) => {
         const dispararSegunElemento = () => {
@@ -264,6 +269,20 @@ function inicializarConfirmacionesEnLinea() {
 inicializarBotonTema();
 observarMensajesExistentes();
 inicializarConfirmacionesEnLinea();
+
+/**
+ * Envía un latido silencioso cada 5 minutos mientras la página permanezca abierta
+ * para mantener activa la sesión en el servidor hasta que el usuario cierre la pestaña o sesión.
+ */
+if (document.body && document.body.classList.contains("pagina-panel")) {
+    window.setInterval(() => {
+        fetch(`${window.location.pathname}?keepalive=1`, {
+            method: "GET",
+            credentials: "same-origin",
+            cache: "no-store",
+        }).catch(() => {});
+    }, 300000);
+}
 
 /*
  * Si la URL contiene ?eliminado=1 tras una baja lógica en admin/mascotas.php,

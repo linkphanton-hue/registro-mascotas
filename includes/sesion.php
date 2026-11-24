@@ -8,9 +8,27 @@
  * @package RegistroMascotas\Includes
  */
 
-/* Inicia el gestor de sesiones de PHP únicamente si no ha sido activado previamente */
+/*
+ * Configura la sesión para persistir durante toda la vida de la ventana del navegador
+ * (lifetime = 0 en cookie y 86400 s en servidor para evitar cierres por Garbage Collector).
+ */
 if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.gc_maxlifetime', '86400');
+    ini_set('session.cookie_lifetime', '0');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     session_start();
+}
+
+/* Responde al latido (keep-alive) en segundo plano para renovar la marca temporal de sesión */
+if (isset($_GET['keepalive']) && $_GET['keepalive'] === '1' && !empty($_SESSION['usuario_id'])) {
+    $_SESSION['ultimo_latido'] = time();
+    http_response_code(204);
+    exit;
 }
 
 /**
@@ -78,10 +96,11 @@ function requerirRol(?string $rol = null, string $rutaLogin = '../login.php'): v
 
     /*
      * Paso 2: Control de acceso por rol (RBAC).
-     * Impide que un cliente acceda a rutas de admin/ o viceversa antes de consultar la BD.
+     * Si el usuario ya tiene sesión válida pero entra a una ruta del otro rol, redirige a su propio panel.
      */
     if ($rol !== null && $rolActual !== $rol) {
-        header('Location: ' . $rutaLogin);
+        $panelPropio = $rolActual === 'admin' ? '../admin/panel.php' : '../cliente/panel.php';
+        header('Location: ' . $panelPropio);
         exit;
     }
 
@@ -110,7 +129,8 @@ function requerirRol(?string $rol = null, string $rutaLogin = '../login.php'): v
             }
 
             if ($rol !== null && $usuarioActivo['rol'] !== $rol) {
-                header('Location: ' . $rutaLogin);
+                $panelPropio = $usuarioActivo['rol'] === 'admin' ? '../admin/panel.php' : '../cliente/panel.php';
+                header('Location: ' . $panelPropio);
                 exit;
             }
 

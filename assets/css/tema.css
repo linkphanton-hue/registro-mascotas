@@ -15,10 +15,10 @@
     --color-superficie-alt: #f8f9fe;
     --color-superficie-destacada: #eeebfc;
     --color-texto: #17234c;
-    --color-texto-secundario: #65708b;
-    --color-texto-tenue: #77819b;
+    --color-texto-secundario: #2d3a5e;
+    --color-texto-tenue: #435074;
     --color-borde: #e8e9f4;
-    --color-borde-campo: #d9dcef;
+    --color-borde-campo: #c9cfe8;
     --color-sombra: rgba(36, 35, 90, 0.06);
     --color-sombra-elevada: rgba(76, 58, 145, 0.14);
 
@@ -35,11 +35,11 @@ html[data-theme="dark"] {
     --color-superficie: #252538;
     --color-superficie-alt: #2d2d44;
     --color-superficie-destacada: #2e294e;
-    --color-texto: #eef0ff;
-    --color-texto-secundario: #b4bcd8;
-    --color-texto-tenue: #8e97b8;
+    --color-texto: #f4f6ff;
+    --color-texto-secundario: #d2d9f0;
+    --color-texto-tenue: #adb7d9;
     --color-borde: #353552;
-    --color-borde-campo: #414164;
+    --color-borde-campo: #4a4a70;
     --color-sombra: rgba(8, 8, 20, 0.35);
     --color-sombra-elevada: rgba(8, 8, 20, 0.55);
 
@@ -86,6 +86,18 @@ html[data-theme="dark"] body[data-modulo="mensajes"] {
     --acento-modulo: #60a5fa;
     --acento-modulo-suave: rgba(96, 165, 250, 0.16);
     --acento-modulo-borde: rgba(96, 165, 250, 0.38);
+}
+
+body[data-modulo="citas"] {
+    --acento-modulo: #4f46e5;
+    --acento-modulo-suave: #eef2ff;
+    --acento-modulo-borde: #c7d2fe;
+}
+
+html[data-theme="dark"] body[data-modulo="citas"] {
+    --acento-modulo: #818cf8;
+    --acento-modulo-suave: rgba(129, 140, 248, 0.16);
+    --acento-modulo-borde: rgba(129, 140, 248, 0.38);
 }
 
 /* Aplicación sutil del acento en etiquetas, iconos y borde superior de tarjetas */
@@ -151,6 +163,7 @@ body,
 .marca,
 .marca-panel,
 .acceso-admin,
+.tarjeta-servicio h2,
 .tabla-admin tbody th {
     color: var(--color-texto);
 }
@@ -159,16 +172,35 @@ body,
 .introduccion,
 .descripcion-listado,
 .tarjeta p,
+.tarjeta-servicio p,
 .lista-objetivos,
 .acceso-admin p,
 .tabla-admin td,
-.menu-panel a,
+.menu-panel a:not(.activo),
 .volver-inicio,
+.login-encabezado p,
+.login-pie,
+.campo-ayuda,
+.opcion-mostrar,
 .perfil-seguridad p,
 .estado-vacio {
     color: var(--color-texto-secundario);
 }
 
+.menu-panel a.activo {
+    color: #ffffff;
+}
+
+.volver-inicio {
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.volver-inicio:hover {
+    color: var(--acento-modulo);
+}
+
+.etiqueta-menu,
 .tarjeta-resumen p,
 .usuario-panel div > span,
 .perfil-presentacion p,
@@ -179,6 +211,7 @@ body,
 #resultado-filtro,
 #resultado-clientes,
 #resultado-mensajes,
+#resultado-citas,
 .aviso-demostracion {
     color: var(--color-texto-tenue);
 }
@@ -337,28 +370,44 @@ html[data-theme="dark"] .mensaje-formulario.informacion {
    BOTÓN DE CAMBIO DE TEMA
    ============================================================ */
 
-.boton-tema {
+.boton-tema,
+.boton-volver-sitio {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 9px 13px;
+    padding: 9px 14px;
 
     font: inherit;
     font-size: 13px;
-    font-weight: 600;
-    color: var(--color-texto-secundario);
+    font-weight: 700;
+    color: var(--color-texto);
+    text-decoration: none;
 
     background-color: var(--color-superficie-alt);
     border: 1px solid var(--color-borde-campo);
     border-radius: 10px;
     cursor: pointer;
 
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.boton-tema:hover {
+.boton-tema:hover,
+.boton-volver-sitio:hover {
     color: var(--acento-modulo);
+    background-color: var(--acento-modulo-suave);
     border-color: var(--acento-modulo);
+}
+
+.pagina-login .boton-volver-sitio {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 5;
+    color: #17234c;
+    background-color: rgba(255, 255, 255, 0.94);
+    border-color: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 6px 18px rgba(23, 35, 76, 0.16);
+    backdrop-filter: blur(10px);
 }
 
 .barra-lateral .boton-tema {
@@ -377,7 +426,25 @@ html[data-theme="dark"] .mensaje-formulario.informacion {
     top: 18px;
     right: 18px;
     z-index: 5;
+    color: #17234c;
+    background-color: rgba(255, 255, 255, 0.94);
+    border-color: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 6px 18px rgba(23, 35, 76, 0.16);
     backdrop-filter: blur(10px);
+}
+
+html[data-theme="dark"] .pagina-login .boton-volver-sitio,
+html[data-theme="dark"] .pagina-login .boton-tema {
+    color: var(--color-texto);
+    background-color: rgba(37, 37, 56, 0.92);
+    border-color: rgba(159, 133, 255, 0.42);
+    box-shadow: 0 8px 22px rgba(8, 8, 20, 0.45);
+}
+
+.pagina-login .boton-volver-sitio:hover,
+.pagina-login .boton-tema:hover {
+    color: var(--acento-modulo);
+    border-color: var(--acento-modulo);
 }
 
 /* ============================================================

@@ -57,12 +57,12 @@ $menu = $esAdmin
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Servicios veterinarios | Cuidado de tus Mascotas</title>
-    <script src="../assets/js/tema-inicial.js"></script>
-    <link rel="stylesheet" href="../assets/css/panel.css">
-    <link rel="stylesheet" href="../assets/css/admin.css">
-    <link rel="stylesheet" href="../assets/css/tema.css">
-    <link rel="stylesheet" href="../assets/css/servicios.css">
-    <script src="../assets/js/interfaz.js" defer></script>
+    <script src="../assets/js/tema-inicial.js?v=<?= filemtime(__DIR__ . '/../assets/js/tema-inicial.js') ?>"></script>
+    <link rel="stylesheet" href="../assets/css/panel.css?v=<?= filemtime(__DIR__ . '/../assets/css/panel.css') ?>">
+    <link rel="stylesheet" href="../assets/css/admin.css?v=<?= filemtime(__DIR__ . '/../assets/css/admin.css') ?>">
+    <link rel="stylesheet" href="../assets/css/servicios.css?v=<?= filemtime(__DIR__ . '/../assets/css/servicios.css') ?>">
+    <link rel="stylesheet" href="../assets/css/tema.css?v=<?= filemtime(__DIR__ . '/../assets/css/tema.css') ?>">
+    <script src="../assets/js/interfaz.js?v=<?= filemtime(__DIR__ . '/../assets/js/interfaz.js') ?>" defer></script>
 </head>
 <body class="pagina-panel">
     <div class="estructura-panel">

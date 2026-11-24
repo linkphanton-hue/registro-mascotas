@@ -9,12 +9,20 @@
  * @package RegistroMascotas
  */
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
+require_once __DIR__ . '/includes/sesion.php';
 require_once __DIR__ . '/includes/conexion.php';
 require_once __DIR__ . '/includes/contrasenas.php';
+
+/* Si el usuario ya posee una sesión activa, lo redirige directamente a su panel sin pedir credenciales de nuevo */
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SESSION['usuario_id']) && !empty($_SESSION['usuario_rol'])) {
+    if ($_SESSION['usuario_rol'] === 'admin') {
+        header('Location: admin/panel.php');
+        exit;
+    } elseif ($_SESSION['usuario_rol'] === 'cliente') {
+        header('Location: cliente/panel.php');
+        exit;
+    }
+}
 
 $mensajeTexto = '';
 $mensajeTipo = '';
@@ -95,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     class="pagina-login"
     <?= $mensajeTexto !== '' ? 'data-toast-mensaje="' . htmlspecialchars($mensajeTexto, ENT_QUOTES, 'UTF-8') . '" data-toast-tipo="' . htmlspecialchars($mensajeTipo, ENT_QUOTES, 'UTF-8') . '"' : '' ?>
 >
+<a href="index.php" class="boton-volver-sitio">← Volver al sitio</a>
 
 <!-- Fondo decorativo con ondas. -->
 <div class="fondo-ondas" aria-hidden="true">

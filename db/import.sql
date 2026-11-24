@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS citas (
     fecha_hora DATETIME NULL DEFAULT NULL,
     motivo VARCHAR(500) NOT NULL,
     servicio_nombre VARCHAR(100) NULL,
-    estado ENUM('Pendiente', 'Confirmada', 'Rechazada', 'Cambio solicitado') NOT NULL DEFAULT 'Pendiente',
+    estado ENUM('Pendiente', 'Confirmada', 'Confirmada (Editada)', 'Rechazada', 'Cancelada', 'Cambio solicitado') NOT NULL DEFAULT 'Pendiente',
     fecha_preferida DATE NULL DEFAULT NULL,
     hora_desde TIME NULL DEFAULT NULL,
     hora_hasta TIME NULL DEFAULT NULL,

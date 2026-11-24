@@ -15,12 +15,16 @@ try {
     if (!is_string($fecha)) {
         throw new InvalidArgumentException('Selecciona una fecha válida.');
     }
-    // Solo el administrador puede excluir la cita que está reprogramando.
-    $excluir = 0;
-    if ($_SESSION['usuario_rol'] === 'admin') {
-        $excluir = filter_var($_GET['excluir_cita'] ?? 0, FILTER_VALIDATE_INT);
-        if ($excluir === false || $excluir < 0) {
-            throw new InvalidArgumentException('La cita seleccionada no es válida.');
+    // Permite excluir la propia cita que el administrador o el cliente está editando.
+    $excluir = filter_var($_GET['excluir_cita'] ?? 0, FILTER_VALIDATE_INT);
+    if ($excluir === false || $excluir < 0) {
+        throw new InvalidArgumentException('La cita seleccionada no es válida.');
+    }
+    if ($excluir > 0 && ($_SESSION['usuario_rol'] ?? '') !== 'admin') {
+        $stmtPropia = $pdo->prepare('SELECT id FROM citas WHERE id = :id AND usuario_id = :usuario LIMIT 1');
+        $stmtPropia->execute([':id' => $excluir, ':usuario' => (int) $_SESSION['usuario_id']]);
+        if (!$stmtPropia->fetchColumn()) {
+            $excluir = 0;
         }
     }
     $zona = new DateTimeZone('America/Santo_Domingo');

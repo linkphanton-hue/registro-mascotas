@@ -46,7 +46,7 @@ function horariosDisponiblesCitas(PDO $pdo, string $fecha, DateTimeZone $zona, i
     $dia = fechaAtencionCitas($fecha, $zona);
     $stmt = $pdo->prepare(
         "SELECT fecha_hora FROM citas
-         WHERE estado IN ('Confirmada', 'Cambio solicitado')
+         WHERE estado IN ('Confirmada', 'Confirmada (Editada)', 'Cambio solicitado')
            AND fecha_hora >= :inicio AND fecha_hora < :fin AND id != :excluir"
     );
     $stmt->execute([
@@ -70,7 +70,7 @@ function horariosDisponiblesCitas(PDO $pdo, string $fecha, DateTimeZone $zona, i
         }
         $turnos[] = [
             'hora' => $hora,
-            'etiqueta' => $inicio->format('g:i a') . ' - ' . $fin->format('g:i a'),
+            'etiqueta' => $inicio->format('H:i') . ' - ' . $fin->format('H:i'),
             'disponible' => $disponible,
         ];
     }
